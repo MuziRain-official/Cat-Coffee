@@ -69,17 +69,17 @@ namespace CatCafe
 
         private void BuildFurniture()
         {
-            // 吧台区设备（占位方块，带碰撞，后续挂 Station 交互）
-            MakeFurniture("CoffeeMachine", CoffeeMachinePos, new Vector2(1.6f, 1.6f), new Color(0.4f, 0.3f, 0.25f));
-            MakeFurniture("Counter", CounterPos, new Vector2(1.6f, 1.6f), new Color(0.5f, 0.45f, 0.35f));
+            // 吧台区设备（占位方块，带碰撞，挂 Station 交互）
+            MakeStation("CoffeeMachine", CoffeeMachinePos, new Vector2(1.6f, 1.6f), new Color(0.4f, 0.3f, 0.25f), StationType.CoffeeMachine);
+            MakeStation("Counter", CounterPos, new Vector2(1.6f, 1.6f), new Color(0.5f, 0.45f, 0.35f), StationType.Counter);
 
             // 3 张桌子（带碰撞，主角不可穿）
             MakeFurniture("Table_A", new Vector3(-3f, 3f, 0f), new Vector2(2f, 1f), new Color(0.45f, 0.35f, 0.25f));
             MakeFurniture("Table_B", new Vector3(0f, 3f, 0f), new Vector2(2f, 1f), new Color(0.45f, 0.35f, 0.25f));
             MakeFurniture("Table_C", new Vector3(3f, 3f, 0f), new Vector2(2f, 1f), new Color(0.45f, 0.35f, 0.25f));
 
-            // 猫窝（无碰撞，标记猫的位置）
-            NewSprite("CatNest", CatNestPos, new Vector2(1.4f, 1.4f), new Color(0.85f, 0.6f, 0.5f), -1);
+            // 猫窝（挂 Station 交互，无碰撞）
+            MakeStation("CatNest", CatNestPos, new Vector2(1.4f, 1.4f), new Color(0.85f, 0.6f, 0.5f), StationType.CatNest);
 
             // 6 个座位标记（无碰撞）
             for (int i = 0; i < Seats.Length; i++)
@@ -95,6 +95,7 @@ namespace CatCafe
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             player.AddComponent<BoxCollider2D>(); // 默认 1x1，随 scale 拉伸
             player.AddComponent<PlayerController>();
+            player.AddComponent<InteractionController>();
         }
 
         private void MakeWall(Vector3 pos, Vector2 size)
@@ -107,6 +108,14 @@ namespace CatCafe
         {
             var go = NewSprite(name, pos, size, color, 0);
             go.AddComponent<BoxCollider2D>();
+            return go;
+        }
+
+        private GameObject MakeStation(string name, Vector3 pos, Vector2 size, Color color, StationType type)
+        {
+            var go = MakeFurniture(name, pos, size, color);
+            var st = go.AddComponent<Station>();
+            st.Type = type;
             return go;
         }
 

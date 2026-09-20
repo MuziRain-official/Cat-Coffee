@@ -43,6 +43,9 @@ namespace CatCafe
         private void Update()
         {
             Flow.Tick(Time.deltaTime);
+
+            if (Input.GetKeyDown(KeyCode.Space))
+                TogglePause();
         }
 
         // —— 暴露给 UI 的操作 ——
