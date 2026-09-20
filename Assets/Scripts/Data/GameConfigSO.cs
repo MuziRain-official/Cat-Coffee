@@ -39,6 +39,8 @@ namespace CatCafe
         public float hungerDecayInterval = 9f;
         [Tooltip("清洁每 N 秒 -1")]
         public float hygieneDecayInterval = 18f;
+        [Tooltip("心情每 N 秒 -1（基础；饿或脏时翻倍）")]
+        public float moodDecayInterval = 12f;
         [Tooltip("喂食恢复量")]
         public float feedRecovery = 50f;
         [Tooltip("铲屎恢复量")]
