@@ -6,8 +6,8 @@ namespace CatCafe
 {
     /// <summary>
     /// 极简 HUD（代码自建 UI，零序列化依赖）。
-    /// 启动时构建 Canvas + EventSystem + 状态文本 + 操作按钮，每帧刷新。
-    /// 用 legacy uGUI + 内置字体，保证全新项目也能直接渲染。
+    /// 统一采用「左上角原点、Y 向下」坐标系：面板与其所有子元素
+    /// 都用同一套 TopLeft 锚点，避免 anchor/pivot 错位。
     /// </summary>
     public class HUDController : MonoBehaviour
     {
@@ -73,17 +73,12 @@ namespace CatCafe
         // —— 代码构建 UI ——
         private void BuildUI()
         {
-            // Unity 2022+ 内置字体为 LegacyRuntime.ttf（旧版 Arial.ttf 已失效）
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             if (font == null) font = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
-            // EventSystem
             if (FindObjectOfType<EventSystem>() == null)
-            {
-                var es = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
-            }
+                new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
 
-            // Canvas
             var canvasGo = new GameObject("HUD_Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -92,72 +87,58 @@ namespace CatCafe
             scaler.referenceResolution = new Vector2(1920, 1080);
             canvasGo.transform.SetParent(transform, false);
 
-            // 顶部状态面板
-            var panel = NewUI("Panel", canvasGo.transform, TextAnchor.UpperLeft);
-            var panelImg = panel.AddComponent<Image>();
-            panelImg.color = new Color(0, 0, 0, 0.5f);
-            var pr = panel.GetComponent<RectTransform>();
-            pr.anchoredPosition = new Vector2(20, -20);
-            pr.sizeDelta = new Vector2(560, 200);
+            // 顶部状态面板（左上角）
+            var topPanel = NewPanel("TopPanel", canvasGo.transform, new Vector2(20, -20), new Vector2(560, 200));
+            _timeText     = NewText("TimeText",     topPanel, font, 30, new Vector2(20, -20),  new Vector2(520, 40));
+            _coinsText    = NewText("CoinsText",    topPanel, font, 26, new Vector2(20, -70),  new Vector2(520, 36));
+            _catText      = NewText("CatText",      topPanel, font, 26, new Vector2(20, -115), new Vector2(520, 36));
+            _customerText = NewText("CustomerText", topPanel, font, 26, new Vector2(20, -155), new Vector2(520, 36));
 
-            _timeText = NewText("TimeText", panel.transform, font, 30, new Vector2(20, -20), new Vector2(520, 40), TextAnchor.MiddleLeft);
-            _coinsText = NewText("CoinsText", panel.transform, font, 26, new Vector2(20, -70), new Vector2(520, 36), TextAnchor.MiddleLeft);
-            _catText = NewText("CatText", panel.transform, font, 26, new Vector2(20, -115), new Vector2(520, 36), TextAnchor.MiddleLeft);
-            _customerText = NewText("CustomerText", panel.transform, font, 26, new Vector2(20, -155), new Vector2(520, 36), TextAnchor.MiddleLeft);
+            // 底部操作面板（左上角，紧跟顶部面板下方）
+            var bottomPanel = NewPanel("BottomPanel", canvasGo.transform, new Vector2(20, -240), new Vector2(900, 300));
+            _orderText = NewText("OrderText", bottomPanel, font, 26, new Vector2(20, -20), new Vector2(500, 36));
 
-            // 底部操作面板
-            var bottom = NewUI("Buttons", canvasGo.transform, TextAnchor.LowerLeft);
-            var bImg = bottom.AddComponent<Image>();
-            bImg.color = new Color(0, 0, 0, 0.5f);
-            var br = bottom.GetComponent<RectTransform>();
-            br.anchoredPosition = new Vector2(20, 20);
-            br.sizeDelta = new Vector2(900, 260);
+            // 咖啡操作行
+            MakeButton("萃取", bottomPanel, font, new Vector2(20, -70), OnBrew);
+            MakeButton("装杯", bottomPanel, font, new Vector2(160, -70), OnCup);
+            MakeButton("上菜", bottomPanel, font, new Vector2(300, -70), OnServe);
 
-            _orderText = NewText("OrderText", bottom.transform, font, 26, new Vector2(20, -20), new Vector2(500, 36), TextAnchor.MiddleLeft);
+            // 猫咪操作行
+            MakeButton("喂食", bottomPanel, font, new Vector2(20, -140), OnFeed);
+            MakeButton("铲屎", bottomPanel, font, new Vector2(160, -140), OnClean);
+            MakeButton("互动", bottomPanel, font, new Vector2(300, -140), OnPet);
 
-            MakeButton("萃取", bottom.transform, font, new Vector2(20, -80), OnBrew);
-            MakeButton("装杯", bottom.transform, font, new Vector2(160, -80), OnCup);
-            MakeButton("上菜", bottom.transform, font, new Vector2(300, -80), OnServe);
+            // 控制行
+            MakeButton("暂停/继续", bottomPanel, font, new Vector2(480, -70), OnPause);
+            MakeButton("快进",      bottomPanel, font, new Vector2(620, -70), OnFast);
+            MakeButton("重开一天",  bottomPanel, font, new Vector2(480, -140), OnRestart);
 
-            MakeButton("喂食", bottom.transform, font, new Vector2(20, -150), OnFeed);
-            MakeButton("铲屎", bottom.transform, font, new Vector2(160, -150), OnClean);
-            MakeButton("互动", bottom.transform, font, new Vector2(300, -150), OnPet);
-
-            MakeButton("暂停/继续", bottom.transform, font, new Vector2(480, -80), OnPause);
-            MakeButton("快进", bottom.transform, font, new Vector2(620, -80), OnFast);
-            MakeButton("重开一天", bottom.transform, font, new Vector2(480, -150), OnRestart);
-
-            _hintText = NewText("HintText", bottom.transform, font, 20, new Vector2(20, -220), new Vector2(860, 40), TextAnchor.MiddleLeft);
+            _hintText = NewText("HintText", bottomPanel, font, 20, new Vector2(20, -220), new Vector2(860, 44));
             _hintText.color = new Color(1f, 0.9f, 0.5f);
         }
 
-        private GameObject NewUI(string name, Transform parent, TextAnchor anchor)
+        // —— 布局辅助：统一 TopLeft 锚点（pivot = 0,1，Y 向下）——
+
+        private Transform NewPanel(string name, Transform parent, Vector2 pos, Vector2 size)
         {
-            var go = new GameObject(name, typeof(RectTransform));
+            var go = new GameObject(name, typeof(RectTransform), typeof(Image));
             go.transform.SetParent(parent, false);
             var rt = go.GetComponent<RectTransform>();
-            rt.anchorMin = rt.anchorMax = rt.pivot = AnchorVector(anchor);
-            return go;
+            AnchorTopLeft(rt, pos, size);
+            go.GetComponent<Image>().color = new Color(0, 0, 0, 0.5f);
+            return go.transform;
         }
 
-        private static Vector2 AnchorVector(TextAnchor a) => a switch
+        private Text NewText(string name, Transform parent, Font font, int size, Vector2 pos, Vector2 sizeDelta)
         {
-            TextAnchor.UpperLeft => new Vector2(0, 1),
-            TextAnchor.LowerLeft => new Vector2(0, 0),
-            TextAnchor.MiddleCenter => new Vector2(0.5f, 0.5f),
-            _ => new Vector2(0.5f, 0.5f),
-        };
-
-        private Text NewText(string name, Transform parent, Font font, int size, Vector2 pos, Vector2 sizeDelta, TextAnchor align)
-        {
-            var go = NewUI(name, parent, TextAnchor.MiddleCenter);
+            var go = new GameObject(name, typeof(RectTransform), typeof(Text));
+            go.transform.SetParent(parent, false);
             var rt = go.GetComponent<RectTransform>();
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = sizeDelta;
-            var t = go.AddComponent<Text>();
+            AnchorTopLeft(rt, pos, sizeDelta);
+            var t = go.GetComponent<Text>();
             t.font = font;
             t.fontSize = size;
-            t.alignment = align;
+            t.alignment = TextAnchor.MiddleLeft;
             t.color = Color.white;
             t.horizontalOverflow = HorizontalWrapMode.Overflow;
             t.verticalOverflow = VerticalWrapMode.Overflow;
@@ -166,25 +147,42 @@ namespace CatCafe
 
         private void MakeButton(string label, Transform parent, Font font, Vector2 pos, UnityEngine.Events.UnityAction onClick)
         {
-            var go = NewUI("Btn_" + label, parent, TextAnchor.MiddleCenter);
+            var go = new GameObject("Btn_" + label, typeof(RectTransform), typeof(Image), typeof(Button));
+            go.transform.SetParent(parent, false);
             var rt = go.GetComponent<RectTransform>();
-            rt.anchoredPosition = pos;
-            rt.sizeDelta = new Vector2(120, 48);
+            AnchorTopLeft(rt, pos, new Vector2(120, 48));
 
-            var img = go.AddComponent<Image>();
+            var img = go.GetComponent<Image>();
             img.color = new Color(0.35f, 0.65f, 0.55f);
 
-            var btn = go.AddComponent<Button>();
+            var btn = go.GetComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(onClick);
 
-            var labelGo = NewUI("Label", go.transform, TextAnchor.MiddleCenter);
+            // 文字铺满按钮
+            var labelGo = new GameObject("Label", typeof(RectTransform), typeof(Text));
+            labelGo.transform.SetParent(go.transform, false);
             var lrt = labelGo.GetComponent<RectTransform>();
-            lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
-            lrt.offsetMin = Vector2.zero; lrt.offsetMax = Vector2.zero;
-            var t = labelGo.AddComponent<Text>();
-            t.font = font; t.fontSize = 22; t.alignment = TextAnchor.MiddleCenter; t.color = Color.white;
+            lrt.anchorMin = Vector2.zero;
+            lrt.anchorMax = Vector2.one;
+            lrt.offsetMin = Vector2.zero;
+            lrt.offsetMax = Vector2.zero;
+            var t = labelGo.GetComponent<Text>();
+            t.font = font;
+            t.fontSize = 22;
+            t.alignment = TextAnchor.MiddleCenter;
+            t.color = Color.white;
             t.text = label;
+        }
+
+        /// <summary>将 RectTransform 锚定到父级左上角，pivot=(0,1)，Y 向下。</summary>
+        private static void AnchorTopLeft(RectTransform rt, Vector2 pos, Vector2 size)
+        {
+            rt.anchorMin = new Vector2(0, 1);
+            rt.anchorMax = new Vector2(0, 1);
+            rt.pivot = new Vector2(0, 1);
+            rt.anchoredPosition = pos; // (右, 下) 偏移
+            rt.sizeDelta = size;
         }
 
         // —— 回调 ——
