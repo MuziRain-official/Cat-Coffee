@@ -52,8 +52,9 @@ namespace CatCafe
             {
                 OrderStep.None => "订单：空闲",
                 OrderStep.Brewing => $"订单：萃取中 {Mathf.CeilToInt(flow.Order.BrewProgress * 100)}%",
-                OrderStep.ReadyToCup => "订单：待装杯",
-                OrderStep.ReadyToServe => "订单：待上菜",
+                OrderStep.ReadyToPickup => "订单：萃取好，回咖啡机取原料",
+                OrderStep.HoldingIngredients => "订单：持原料，到装杯台装杯",
+                OrderStep.ReadyToServe => "订单：持成品，上菜给顾客",
                 _ => ""
             };
         }

@@ -26,22 +26,41 @@ namespace CatCafe.Tests
             Assert.AreEqual(0.5f, o.BrewProgress, 0.01f);
 
             o.Tick(1.25f, BrewSeconds);
-            Assert.AreEqual(OrderStep.ReadyToCup, o.Step);
+            Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
             Assert.AreEqual(1f, o.BrewProgress);
         }
 
         [Test]
-        public void Cup_OnlyWorksAfterBrew()
+        public void Pickup_OnlyWorksAfterBrew()
         {
             var o = new Order();
-            o.Cup(); // 未萃取，忽略
+            o.Pickup(); // 未萃取，忽略
             Assert.AreEqual(OrderStep.None, o.Step);
 
             o.StartBrewing();
-            o.Cup(); // 萃取未完成，忽略
+            o.Pickup(); // 萃取未完成，忽略
             Assert.AreEqual(OrderStep.Brewing, o.Step);
 
             o.Tick(BrewSeconds, BrewSeconds);
+            o.Pickup(); // 萃取完成，可取原料
+            Assert.AreEqual(OrderStep.HoldingIngredients, o.Step);
+        }
+
+        [Test]
+        public void Cup_OnlyWorksWhenHoldingIngredients()
+        {
+            var o = new Order();
+            o.Cup(); // 未持原料，忽略
+            Assert.AreEqual(OrderStep.None, o.Step);
+
+            // 萃取完但没取原料，不能装杯
+            o.StartBrewing();
+            o.Tick(BrewSeconds, BrewSeconds);
+            o.Cup();
+            Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
+
+            // 取原料后，才能装杯
+            o.Pickup();
             o.Cup();
             Assert.AreEqual(OrderStep.ReadyToServe, o.Step);
         }
@@ -55,6 +74,7 @@ namespace CatCafe.Tests
 
             o.StartBrewing();
             o.Tick(BrewSeconds, BrewSeconds);
+            o.Pickup();
             o.Cup();
 
             bool served = o.Serve(customer, 12f);
@@ -83,11 +103,31 @@ namespace CatCafe.Tests
 
             o.StartBrewing();
             o.Tick(BrewSeconds, BrewSeconds);
+            o.Pickup();
             o.Cup();
 
             bool served = o.Serve(customer, 12f);
             Assert.IsFalse(served);
             Assert.AreEqual(OrderStep.ReadyToServe, o.Step); // 未消费，保持待上菜
+        }
+
+        [Test]
+        public void FullFlow_FollowsFourStepSequence()
+        {
+            var o = new Order();
+            Assert.AreEqual(OrderStep.None, o.Step);
+
+            o.StartBrewing();
+            Assert.AreEqual(OrderStep.Brewing, o.Step);
+
+            o.Tick(BrewSeconds, BrewSeconds);
+            Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
+
+            o.Pickup();
+            Assert.AreEqual(OrderStep.HoldingIngredients, o.Step);
+
+            o.Cup();
+            Assert.AreEqual(OrderStep.ReadyToServe, o.Step);
         }
     }
 }

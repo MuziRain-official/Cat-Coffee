@@ -63,10 +63,18 @@ namespace CatCafe
             return true;
         }
 
-        /// <summary>装杯（第 2 步，即时）。仅在萃取完成后有效。</summary>
+        /// <summary>回咖啡机取原料。仅在萃取完成后有效。</summary>
+        public bool Pickup()
+        {
+            if (_order.Step != OrderStep.ReadyToPickup) return false;
+            _order.Pickup();
+            return true;
+        }
+
+        /// <summary>装杯（第 2 步，即时）。仅在持原料时有效。</summary>
         public bool Cup()
         {
-            if (_order.Step != OrderStep.ReadyToCup) return false;
+            if (_order.Step != OrderStep.HoldingIngredients) return false;
             _order.Cup();
             return true;
         }

@@ -22,10 +22,20 @@ namespace CatCafe
         {
             switch (Type)
             {
-                case StationType.CoffeeMachine: Flow?.Brew(); break;
+                case StationType.CoffeeMachine: CoffeeMachineInteract(); break;
                 case StationType.Counter: Flow?.Cup(); break;
                 case StationType.CatNest: Flow?.FeedCat(); break;
             }
+        }
+
+        /// <summary>咖啡机智能分发：萃取完成后按 E = 取原料，否则 = 开始萃取。</summary>
+        private void CoffeeMachineInteract()
+        {
+            if (Flow == null) return;
+            if (Flow.Order.Step == OrderStep.ReadyToPickup)
+                Flow.Pickup();      // 萃取好了，回来取原料
+            else
+                Flow.Brew();        // 空闲则开始萃取
         }
 
         public void OnInteractSecondary()

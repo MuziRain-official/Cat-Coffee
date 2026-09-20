@@ -58,9 +58,10 @@ namespace CatCafe.Tests
             Assert.GreaterOrEqual(_flow.Customers.Count, 1);
 
             Assert.IsTrue(_flow.Brew());
-            Advance(_config.brewSeconds); // 萃取完成
-            Assert.IsTrue(_flow.Cup());
-            Assert.IsTrue(_flow.ServeToEarliestWaiting());
+            Advance(_config.brewSeconds); // 萃取完成 → ReadyToPickup
+            Assert.IsTrue(_flow.Pickup());  // 取原料
+            Assert.IsTrue(_flow.Cup());     // 装杯
+            Assert.IsTrue(_flow.ServeToEarliestWaiting()); // 上菜
 
             Advance(_config.customerEatingSeconds); // 用餐完成 → 付费
 
