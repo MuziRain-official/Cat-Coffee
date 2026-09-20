@@ -3,21 +3,18 @@ using UnityEngine;
 namespace CatCafe
 {
     /// <summary>
-    /// 游戏主控制器（单例）。持有全局配置与各系统，驱动每帧 Tick。
-    /// 后续时间/顾客/猫咪/订单/结算系统都挂在这里统一驱动。
+    /// 游戏主控制器（单例）。持有 GameFlow（纯逻辑编排器），每帧驱动。
+    /// config 为空时自动创建运行时实例，保证场景零配置即可运行。
     /// </summary>
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
 
-        [Header("全局配置")]
+        [Header("全局配置（留空则运行时自动创建默认值）")]
         [SerializeField] private GameConfigSO config;
 
-        // 运行时状态（非序列化，纯逻辑）
-        public DayClock Clock { get; private set; } = new DayClock();
-
-        /// <summary>是否正在营业中（打烊后为 false）</summary>
-        public bool IsRunning => !Clock.IsDayOver(config.dayDurationSeconds);
+        public GameFlow Flow { get; private set; }
+        public GameConfigSO Config { get; private set; }
 
         private void Awake()
         {
@@ -27,29 +24,38 @@ namespace CatCafe
                 return;
             }
             Instance = this;
+
+            Config = config != null ? config : ScriptableObject.CreateInstance<GameConfigSO>();
+            Flow = new GameFlow(Config);
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+                // 释放运行时自动创建的 config，避免泄漏
+                if (config == null && Config != null)
+                    Destroy(Config);
+            }
         }
 
         private void Update()
         {
-            // 打烊后停止推进
-            if (!IsRunning) return;
-
-            Clock.Tick(Time.deltaTime);
+            Flow.Tick(Time.deltaTime);
         }
 
-        /// <summary>开始/重启一个营业日。</summary>
-        public void StartDay()
-        {
-            Clock.Reset();
-            Clock.IsPaused = false;
-            Clock.TimeScale = 1f;
-        }
-
-        /// <summary>切换暂停。</summary>
-        public void TogglePause() => Clock.IsPaused = !Clock.IsPaused;
-
-        /// <summary>切换快进（2x）。</summary>
+        // —— 暴露给 UI 的操作 ——
+        public void StartDay() { Flow = new GameFlow(Config); }
+        public void TogglePause() => Flow.Clock.IsPaused = !Flow.Clock.IsPaused;
         public void ToggleFastForward() =>
-            Clock.TimeScale = Clock.TimeScale > 1f ? 1f : config.fastForwardMultiplier;
+            Flow.Clock.TimeScale = Flow.Clock.TimeScale > 1f ? 1f : Config.fastForwardMultiplier;
+
+        public void Brew() => Flow.Brew();
+        public void Cup() => Flow.Cup();
+        public void Serve() => Flow.ServeToEarliestWaiting();
+        public void FeedCat() => Flow.FeedCat();
+        public void CleanCat() => Flow.CleanCat();
+        public void PetCat() => Flow.PetCat();
     }
 }
