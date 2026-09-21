@@ -52,7 +52,7 @@ namespace CatCafe
             _coinsText.text = $"金币 {flow.Ledger.Coins}  (收入{flow.Ledger.Revenue} 成本{flow.Ledger.Cost})";
 
             var c = flow.Cat;
-            _catText.text = $"猫  饱腹{c.Satiety:F0} 清洁{c.Hygiene:F0} 心情{c.Mood:F0}  [{FlowLabel(flow)}]";
+            _catText.text = $"猫  饱腹{c.Satiety:F0} 清洁{c.Hygiene:F0} 心情{c.Mood:F0}  位置[{ZoneLabel(c)}]  [{FlowLabel(flow)}]";
 
             _customerText.text = $"顾客  在场{flow.Customers.Count}  已服务{flow.ServedCount}  流失{flow.LeftCount}";
 
@@ -91,6 +91,16 @@ namespace CatCafe
             _ => "良好",
         };
 
+        private static string ZoneLabel(CatState c) => c.IsCarried
+            ? "被抱着"
+            : c.Zone switch
+            {
+                CatZone.Bar => "吧台(做咖啡更易)",
+                CatZone.Seat => "座位(顾客耐心↑)",
+                CatZone.Door => "门口(客流↑)",
+                _ => "猫窝",
+            };
+
         private void BuildUI()
         {
             Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -117,7 +127,7 @@ namespace CatCafe
             _orderText = NewText("OrderText", bottomPanel, font, 26, new Vector2(20, -20), new Vector2(500, 36));
             _hintText  = NewText("HintText",  bottomPanel, font, 20, new Vector2(20, -80), new Vector2(860, 44));
             _hintText.color = new Color(1f, 0.9f, 0.5f);
-            _hintText.text = "WASD移动 · 咖啡机按E萃取(时机条再按E停) · 猫前:E喂食 Q铲屎 R互动 · 空格暂停";
+            _hintText.text = "WASD移动 · 咖啡机E萃取 · 猫前:E喂食 Q铲屎 R互动 F抱猫 · 空格暂停";
 
             BuildBrewGameUI(canvasGo.transform, font);
         }

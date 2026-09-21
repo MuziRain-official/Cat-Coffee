@@ -62,7 +62,14 @@ namespace CatCafe
         {
             if (_order.Step != OrderStep.None) return false;
             _order.StartBrewing();
+
+            // 吧台猫增益：完美区宽度放大
+            float bonus = 0f;
+            if (_cat.Zone == CatZone.Bar && !_cat.IsCarried)
+                bonus = _config.barZonePerfectWidthBonus * _cat.GainStrength(_config);
+            _brewGame.PerfectWidthMultiplier = 1f + bonus;
             _brewGame.Start();
+
             _ledger.RecordCost(_config.coffeeCost); // 制作时扣成本
             return true;
         }
@@ -115,6 +122,22 @@ namespace CatCafe
         public void CleanCat() => _cat.Clean(_config);
         public void PetCat() => _cat.Pet(_config);
 
+        /// <summary>抱起猫（F 键）。成功返回 true。</summary>
+        public bool PickUpCat()
+        {
+            if (_cat.IsCarried) return false;
+            _cat.PickUp();
+            return true;
+        }
+
+        /// <summary>把猫放到某区域（猫垫）。成功返回 true。</summary>
+        public bool PutDownCat(CatZone zone)
+        {
+            if (!_cat.IsCarried) return false;
+            _cat.PutDown(zone);
+            return true;
+        }
+
         // —— 推进 ——
 
         /// <summary>推进一帧。返回本帧新付费的顾客数。</summary>
@@ -129,10 +152,15 @@ namespace CatCafe
             int paidThisFrame = 0;
             SpawnIfDue(deltaTime);
 
+            // 顾客耐心减速：座位区猫增益
+            float patienceSlow = 0f;
+            if (_cat.Zone == CatZone.Seat && !_cat.IsCarried)
+                patienceSlow = _config.seatZonePatienceSlow * _cat.GainStrength(_config);
+
             // 推进顾客，处理付费/流失
             foreach (var c in _customers)
             {
-                c.Tick(deltaTime);
+                c.Tick(deltaTime, patienceSlow);
                 if (c.Phase == CustomerPhase.Paid)
                 {
                     int price = PriceFor(c.ServedQuality);
@@ -163,7 +191,12 @@ namespace CatCafe
 
         private void SpawnIfDue(float deltaTime)
         {
-            _spawnTimer -= deltaTime;
+            // 门口猫增益：生成间隔缩短（加速客流）
+            float spawnBoost = 0f;
+            if (_cat.Zone == CatZone.Door && !_cat.IsCarried)
+                spawnBoost = _config.doorZoneSpawnBoost * _cat.GainStrength(_config);
+
+            _spawnTimer -= deltaTime * (1f + spawnBoost);
             if (_spawnTimer > 0f) return;
             if (_customers.Count >= _config.maxCustomers) return;
 

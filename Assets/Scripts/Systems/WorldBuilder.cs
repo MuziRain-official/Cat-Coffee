@@ -18,8 +18,22 @@ namespace CatCafe
         public static Vector3 CoffeeMachinePos = new Vector3(-3f, -4.5f, 0f);
         public static Vector3 CounterPos       = new Vector3(0f, -4.5f, 0f);
         public static Vector3 WarmerPos        = new Vector3(3f, -4.5f, 0f);   // 保温台(P3-4)预留位置
-        public static Vector3 CatNestPos       = new Vector3(-6f, -1f, 0f);    // 猫窝在活动区左下，顺路
+        public static Vector3 CatNestPos       = new Vector3(-6f, -1f, 0f);    // 默认猫窝（Nest 区）
         public static Vector3 PlayerSpawnPos   = new Vector3(0f, -2f, 0f);     // 主角出生在吧台上方活动区
+
+        // 三个猫垫位置（吧台/座位/门口）
+        public static Vector3 CatPadBarPos  = new Vector3(-6f, -3.8f, 0f); // 吧台旁
+        public static Vector3 CatPadSeatPos = new Vector3(0f, 1.2f, 0f);    // 座位区中间
+        public static Vector3 CatPadDoorPos = new Vector3(6.5f, 3.5f, 0f);  // 门口旁
+
+        /// <summary>根据区域返回猫垫位置（猫不在怀时定位用）。</summary>
+        public static Vector3 PadPosition(CatZone zone) => zone switch
+        {
+            CatZone.Bar => CatPadBarPos,
+            CatZone.Seat => CatPadSeatPos,
+            CatZone.Door => CatPadDoorPos,
+            _ => CatNestPos,
+        };
 
         // 6 个座位位置（桌子下方，面向吧台，方便主角上菜）
         public static readonly Vector3[] Seats = new Vector3[]
@@ -81,12 +95,34 @@ namespace CatCafe
             MakeFurniture("Table_B", new Vector3(0f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));
             MakeFurniture("Table_C", new Vector3(4.5f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));
 
-            // —— 猫窝（吧台旁顺路，无碰撞，挂 Station 交互）——
-            MakeStation("CatNest", CatNestPos, new Vector2(1.4f, 1.4f), new Color(0.85f, 0.6f, 0.5f), StationType.CatNest);
+            // —— 三个猫垫（无碰撞）+ 猫实体 ——
+            BuildCatPadsAndCat();
 
             // 6 个座位标记（无碰撞）
             for (int i = 0; i < Seats.Length; i++)
                 NewSprite("Seat_" + i, Seats[i], new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
+        }
+
+        private void BuildCatPadsAndCat()
+        {
+            // 默认猫窝（Nest，猫初始位置）
+            NewSprite("CatNest", CatNestPos, new Vector2(1.2f, 1.2f), new Color(0.85f, 0.6f, 0.5f), -1);
+
+            // 三个猫垫（带 CatPad 组件）
+            MakeCatPad("CatPad_Bar", CatPadBarPos, new Color(0.4f, 0.7f, 0.5f), CatZone.Bar);
+            MakeCatPad("CatPad_Seat", CatPadSeatPos, new Color(0.4f, 0.6f, 0.8f), CatZone.Seat);
+            MakeCatPad("CatPad_Door", CatPadDoorPos, new Color(0.8f, 0.7f, 0.4f), CatZone.Door);
+
+            // 猫实体（橙色，带 CatView 交互）
+            var cat = NewSprite("Cat", CatNestPos, new Vector2(0.9f, 0.9f), new Color(0.95f, 0.6f, 0.25f), 4);
+            cat.AddComponent<CatView>();
+        }
+
+        private void MakeCatPad(string name, Vector3 pos, Color color, CatZone zone)
+        {
+            var go = NewSprite(name, pos, new Vector2(1.1f, 1.1f), color, -1);
+            var pad = go.AddComponent<CatPad>();
+            pad.Zone = zone;
         }
 
         private void BuildPlayer()

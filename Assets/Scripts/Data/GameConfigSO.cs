@@ -61,6 +61,16 @@ namespace CatCafe
         [Tooltip("三态均值 < 此阈值 → 惩罚")]
         public float penaltyThreshold = 30f;
 
+        [Header("猫咪区域增益")]
+        [Tooltip("吧台区：萃取小游戏完美区宽度加成比例")]
+        public float barZonePerfectWidthBonus = 0.3f;
+        [Tooltip("座位区：顾客耐心下降减速比例")]
+        public float seatZonePatienceSlow = 0.25f;
+        [Tooltip("门口区：顾客生成加速比例")]
+        public float doorZoneSpawnBoost = 0.2f;
+        [Tooltip("抱猫时主角移动减速比例")]
+        public float carryCatSlow = 0.3f;
+
         [Header("经济系统")]
         [Tooltip("咖啡售价（金币）")]
         public int coffeePrice = 12;

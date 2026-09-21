@@ -26,6 +26,9 @@ namespace CatCafe
         /// <summary>本次结果（停止后才有）。</summary>
         public BrewQuality? Result { get; private set; }
 
+        /// <summary>完美区宽度倍率（吧台猫增益可放大，默认 1）。</summary>
+        public float PerfectWidthMultiplier { get; set; } = 1f;
+
         private float _phase;
 
         public void Start()
@@ -48,17 +51,18 @@ namespace CatCafe
         public BrewQuality Stop(GameConfigSO config)
         {
             if (!IsActive) return BrewQuality.Good;
-            var q = Judge(PointerPosition, config);
+            var q = Judge(PointerPosition, config, PerfectWidthMultiplier);
             Result = q;
             IsActive = false;
             return q;
         }
 
-        /// <summary>按指针位置判定品质（纯函数）。</summary>
-        public static BrewQuality Judge(float position, GameConfigSO config)
+        /// <summary>按指针位置判定品质（纯函数）。完美区宽度受倍率缩放。</summary>
+        public static BrewQuality Judge(float position, GameConfigSO config, float perfectWidthMultiplier = 1f)
         {
+            float perfectHalf = config.perfectHalfWidth * perfectWidthMultiplier;
             float dist = Mathf.Abs(position - 0.5f);
-            if (dist <= config.perfectHalfWidth) return BrewQuality.Perfect;
+            if (dist <= perfectHalf) return BrewQuality.Perfect;
             if (dist <= config.goodHalfWidth) return BrewQuality.Good;
             return BrewQuality.Poor;
         }

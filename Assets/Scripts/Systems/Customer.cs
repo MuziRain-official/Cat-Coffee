@@ -49,13 +49,13 @@ namespace CatCafe
             ServedQuality = quality;
         }
 
-        /// <summary>推进状态机。</summary>
-        public void Tick(float deltaTime)
+        /// <summary>推进状态机。patienceSlow 为耐心下降减速比例（0=不减速，0.25=慢25%）。</summary>
+        public void Tick(float deltaTime, float patienceSlow = 0f)
         {
             switch (Phase)
             {
                 case CustomerPhase.Waiting:
-                    RemainingPatience -= deltaTime;
+                    RemainingPatience -= deltaTime * (1f - patienceSlow);
                     if (RemainingPatience <= 0f) Phase = CustomerPhase.Left;
                     break;
 

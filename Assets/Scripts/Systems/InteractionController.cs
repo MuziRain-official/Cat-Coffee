@@ -13,6 +13,7 @@ namespace CatCafe
             if (Input.GetKeyDown(KeyCode.E)) Interact(0);
             if (Input.GetKeyDown(KeyCode.Q)) Interact(1);
             if (Input.GetKeyDown(KeyCode.R)) Interact(2);
+            if (Input.GetKeyDown(KeyCode.F)) Carry();
         }
 
         private void Interact(int slot)
@@ -26,6 +27,14 @@ namespace CatCafe
                 case 1: target.OnInteractSecondary(); break;
                 case 2: target.OnInteractTertiary(); break;
             }
+        }
+
+        /// <summary>F 键：抱猫/放猫（仅猫实体响应）。</summary>
+        private void Carry()
+        {
+            var target = FindNearest();
+            if (target is CatView cat)
+                cat.ToggleCarry();
         }
 
         /// <summary>找距离最近且在范围内的可交互对象。</summary>

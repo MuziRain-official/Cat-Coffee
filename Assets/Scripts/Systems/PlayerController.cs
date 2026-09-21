@@ -22,7 +22,14 @@ namespace CatCafe
             float v = Input.GetAxisRaw("Vertical");
             var dir = new Vector2(h, v);
             if (dir.sqrMagnitude > 1f) dir.Normalize();
-            _rb.velocity = dir * moveSpeed;
+
+            // 抱猫减速
+            float speed = moveSpeed;
+            var gm = GameManager.Instance;
+            if (gm != null && gm.Flow != null && gm.Flow.Cat.IsCarried)
+                speed *= 1f - gm.Config.carryCatSlow;
+
+            _rb.velocity = dir * speed;
         }
     }
 }
