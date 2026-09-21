@@ -284,6 +284,36 @@ namespace CatCafe
             return c.ToSprite();
         }
 
+        /// <summary>道具像素图标。</summary>
+        public static Sprite ItemIcon(ItemType item)
+        {
+            var c = new PixelCanvas(N);
+            switch (item)
+            {
+                case ItemType.QuickServe: // 猫咪跑腿：猫爪印
+                    c.FillCircle(8, 8, 7, PixelPalette.Orange);
+                    c.FillCircle(6, 6, 2, PixelPalette.LightOrange);
+                    c.FillCircle(8, 4, 2, PixelPalette.LightOrange);
+                    c.FillCircle(10, 6, 2, PixelPalette.LightOrange);
+                    c.FillCircle(8, 9, 3, PixelPalette.LightOrange);
+                    break;
+
+                case ItemType.NoWait: // 猫咪加速：闪电
+                    c.FillCircle(8, 8, 7, PixelPalette.LightOrange);
+                    c.FillRect(9, 2, 12, 8, PixelPalette.Orange);
+                    c.FillRect(6, 6, 9, 13, PixelPalette.Orange);
+                    c.FillRect(8, 1, 10, 6, PixelPalette.Orange);
+                    break;
+
+                case ItemType.ExtraTables: // 猫咪扩张：桌子
+                    c.FillCircle(8, 8, 7, PixelPalette.Wood);
+                    c.FillCircle(8, 8, 5, PixelPalette.LightWood);
+                    c.FillRect(7, 4, 9, 12, PixelPalette.DarkWood);
+                    break;
+            }
+            return c.ToSprite();
+        }
+
         /// <summary>按资产名获取程序化 sprite。</summary>
         public static Sprite Get(string assetName) => assetName switch
         {

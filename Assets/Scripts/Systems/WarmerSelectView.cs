@@ -12,6 +12,7 @@ namespace CatCafe
         private GameObject[] _slots = new GameObject[3];        // 3 个餐位
         private SpriteRenderer[] _slotSRs = new SpriteRenderer[3];
         private SpriteRenderer[] _slotIcons = new SpriteRenderer[3]; // 每餐位菜品图标
+        private TextMesh[] _slotNames = new TextMesh[3];            // 每餐位头顶菜品名字
 
         private void Start()
         {
@@ -39,13 +40,27 @@ namespace CatCafe
                 _slotSRs[i].sortingOrder = 21;
                 _slots[i] = slot;
 
-                // 菜品图标（餐位中央）
+                // 菜品图标（餐位中央，正常大小 0.45）
                 var icon = new GameObject("Icon", typeof(SpriteRenderer));
                 icon.transform.SetParent(slot.transform, false);
-                icon.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
-                icon.transform.localPosition = Vector3.zero;
+                icon.transform.localScale = new Vector3(0.45f, 0.45f, 1f);
+                icon.transform.localPosition = new Vector3(0f, 0.05f, 0f);
                 _slotIcons[i] = icon.GetComponent<SpriteRenderer>();
                 _slotIcons[i].sortingOrder = 22;
+
+                // 头顶菜品名字
+                var nameGo = new GameObject("Name", typeof(TextMesh));
+                nameGo.transform.SetParent(slot.transform, false);
+                nameGo.transform.localPosition = new Vector3(0f, 0.62f, 0f);
+                var tm = nameGo.GetComponent<TextMesh>();
+                tm.fontSize = 40;
+                tm.characterSize = 0.03f;
+                tm.anchor = TextAnchor.MiddleCenter;
+                tm.alignment = TextAlignment.Center;
+                tm.color = Color.white;
+                tm.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                nameGo.GetComponent<MeshRenderer>().sortingOrder = 23;
+                _slotNames[i] = tm;
             }
 
             _panel.SetActive(false);
@@ -67,6 +82,7 @@ namespace CatCafe
                 {
                     _slots[i].SetActive(true);
                     _slotIcons[i].sprite = PixelArtGenerator.CupIcon(warmer.Cups[i].Recipe);
+                    _slotNames[i].text = Recipe.Name(warmer.Cups[i].Recipe); // 头顶名字
                     // 选中餐位黄色背景
                     _slotSRs[i].color = (i == flow.WarmerCursor)
                         ? new Color(0.95f, 0.85f, 0.3f, 0.95f)  // 黄色高亮

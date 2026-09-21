@@ -13,6 +13,7 @@ namespace CatCafe
         private TextMesh _nameText;
         private TextMesh _priceText;
         private TextMesh _descText;
+        private SpriteRenderer _iconSR;
 
         private void Start()
         {
@@ -26,8 +27,16 @@ namespace CatCafe
             bg.sortingOrder = 30;
 
             _nameText = CreateText("Name", _panel.transform, new Vector3(0f, 0.75f, 0f), 56, 0.02f, Color.white, 31);
-            _priceText = CreateText("Price", _panel.transform, new Vector3(0f, 0.25f, 0f), 44, 0.018f, new Color(1f, 0.85f, 0.4f), 31);
-            _descText = CreateText("Desc", _panel.transform, new Vector3(0f, -0.3f, 0f), 32, 0.014f, new Color(0.85f, 0.85f, 0.85f), 31);
+            _priceText = CreateText("Price", _panel.transform, new Vector3(0f, 0.05f, 0f), 44, 0.018f, new Color(1f, 0.85f, 0.4f), 31);
+            _descText = CreateText("Desc", _panel.transform, new Vector3(0f, -0.45f, 0f), 32, 0.014f, new Color(0.85f, 0.85f, 0.85f), 31);
+
+            // 道具图标（面板中央上方）
+            var iconGo = new GameObject("ItemIcon", typeof(SpriteRenderer));
+            iconGo.transform.SetParent(_panel.transform, false);
+            iconGo.transform.localScale = new Vector3(0.6f, 0.6f, 1f);
+            iconGo.transform.localPosition = new Vector3(-0.8f, 0.05f, 0f);
+            _iconSR = iconGo.GetComponent<SpriteRenderer>();
+            _iconSR.sortingOrder = 31;
 
             _panel.SetActive(false);
         }
@@ -59,6 +68,7 @@ namespace CatCafe
 
             var item = flow.CurrentShopItem();
             _nameText.text = ItemDef.Name(item);
+            _iconSR.sprite = PixelArtGenerator.ItemIcon(item); // 道具图标
             int price = ItemDef.Price(item);
             _priceText.text = flow.Progress.HasItem(item) ? "已拥有" : $"价格 {price} 金币";
             _descText.text = ItemDef.Desc(item) + "\n(A/D 切换  F 购买  E 关闭)";
