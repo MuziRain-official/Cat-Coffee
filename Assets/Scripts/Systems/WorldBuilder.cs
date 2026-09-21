@@ -15,17 +15,18 @@ namespace CatCafe
         public const float RoomH = 12f;
 
         // 关键位置（供交互系统引用）
-        public static Vector3 CoffeeMachinePos = new Vector3(-4f, -3f, 0f);
-        public static Vector3 CounterPos       = new Vector3(4f, -3f, 0f);
-        public static Vector3 CatNestPos       = new Vector3(-5f, 4f, 0f);
-        public static Vector3 PlayerSpawnPos   = new Vector3(0f, -1f, 0f);
+        public static Vector3 CoffeeMachinePos = new Vector3(-3f, -4f, 0f);
+        public static Vector3 CounterPos       = new Vector3(0f, -4f, 0f);
+        public static Vector3 WarmerPos        = new Vector3(3f, -4f, 0f);    // 保温台(P3-4)预留位置
+        public static Vector3 CatNestPos       = new Vector3(-5f, -2.5f, 0f); // 猫窝挪到吧台旁顺路
+        public static Vector3 PlayerSpawnPos   = new Vector3(0f, -5f, 0f);
 
-        // 6 个座位位置（顾客会坐这里）
+        // 6 个座位位置（桌子下方，面向吧台，方便主角上菜）
         public static readonly Vector3[] Seats = new Vector3[]
         {
-            new Vector3(-3f, 3.8f, 0f), new Vector3(-3f, 2.2f, 0f),
-            new Vector3( 0f, 3.8f, 0f), new Vector3( 0f, 2.2f, 0f),
-            new Vector3( 3f, 3.8f, 0f), new Vector3( 3f, 2.2f, 0f),
+            new Vector3(-5.2f, 1.2f, 0f), new Vector3(-3.8f, 1.2f, 0f),
+            new Vector3(-0.7f, 1.2f, 0f), new Vector3( 0.7f, 1.2f, 0f),
+            new Vector3( 3.8f, 1.2f, 0f), new Vector3( 5.2f, 1.2f, 0f),
         };
 
         private void Start()
@@ -69,16 +70,18 @@ namespace CatCafe
 
         private void BuildFurniture()
         {
-            // 吧台区设备（占位方块，带碰撞，挂 Station 交互）
+            // —— 吧台三件套抱团（做咖啡少跑路）——
             MakeStation("CoffeeMachine", CoffeeMachinePos, new Vector2(1.6f, 1.6f), new Color(0.4f, 0.3f, 0.25f), StationType.CoffeeMachine);
             MakeStation("Counter", CounterPos, new Vector2(1.6f, 1.6f), new Color(0.5f, 0.45f, 0.35f), StationType.Counter);
+            // 保温台：P3-4 挂交互，现在先放占位家具（带碰撞）
+            MakeFurniture("Warmer", WarmerPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.4f));
 
-            // 3 张桌子（带碰撞，主角不可穿）
-            MakeFurniture("Table_A", new Vector3(-3f, 3f, 0f), new Vector2(2f, 1f), new Color(0.45f, 0.35f, 0.25f));
-            MakeFurniture("Table_B", new Vector3(0f, 3f, 0f), new Vector2(2f, 1f), new Color(0.45f, 0.35f, 0.25f));
-            MakeFurniture("Table_C", new Vector3(3f, 3f, 0f), new Vector2(2f, 1f), new Color(0.45f, 0.35f, 0.25f));
+            // —— 3 张桌子（上方，围绕吧台）——
+            MakeFurniture("Table_A", new Vector3(-4.5f, 2.5f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));
+            MakeFurniture("Table_B", new Vector3(0f, 2.5f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));
+            MakeFurniture("Table_C", new Vector3(4.5f, 2.5f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));
 
-            // 猫窝（挂 Station 交互，无碰撞）
+            // —— 猫窝（吧台旁顺路，无碰撞，挂 Station 交互）——
             MakeStation("CatNest", CatNestPos, new Vector2(1.4f, 1.4f), new Color(0.85f, 0.6f, 0.5f), StationType.CatNest);
 
             // 6 个座位标记（无碰撞）
