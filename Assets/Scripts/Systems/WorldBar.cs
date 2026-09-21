@@ -14,13 +14,14 @@ namespace CatCafe
         private float _height;
 
         /// <summary>
-        /// 创建进度条。localPos / width / height 均按父物体坐标系的世界单位解释，
-        /// 内部自动补偿父缩放。
+        /// 创建进度条。localPos 直接作为父坐标系局部位置（不做缩放补偿）；
+        /// 尺寸 width/height 会补偿父缩放，保证世界尺寸精确。
         /// </summary>
         public static WorldBar Create(Transform parent, Vector3 localPos, float width, float height, Color fillColor)
         {
             var go = new GameObject("WorldBar");
             go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos; // 直接用局部坐标
 
             // 补偿父物体缩放：让进度条自身在世界上是 1:1 尺寸
             var parentScale = parent.lossyScale;
@@ -28,11 +29,6 @@ namespace CatCafe
                 1f / Mathf.Max(parentScale.x, 1e-4f),
                 1f / Mathf.Max(parentScale.y, 1e-4f),
                 1f);
-            // localPosition 同样除以父缩放，使最终世界偏移 = localPos
-            go.transform.localPosition = new Vector3(
-                localPos.x / Mathf.Max(parentScale.x, 1e-4f),
-                localPos.y / Mathf.Max(parentScale.y, 1e-4f),
-                localPos.z);
 
             // 背景：左 pivot，世界尺寸 = width × height
             var bg = NewQuad("BG", go.transform, new Color(0.2f, 0.2f, 0.2f, 0.9f), -1);

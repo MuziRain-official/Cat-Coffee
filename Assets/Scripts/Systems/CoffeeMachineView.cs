@@ -11,7 +11,8 @@ namespace CatCafe
 
         private void Start()
         {
-            _bar = WorldBar.Create(transform, new Vector3(0f, 1.2f, 0f), 1.2f, 0.1f, new Color(0.9f, 0.6f, 0.2f));
+            // 进度条贴在咖啡机台面上（方块内部偏上，而非飘在上方空中）
+            _bar = WorldBar.Create(transform, new Vector3(0f, 0.25f, 0f), 1.2f, 0.1f, new Color(0.9f, 0.6f, 0.2f));
             _bar.SetVisible(false);
         }
 

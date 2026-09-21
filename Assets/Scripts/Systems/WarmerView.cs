@@ -3,8 +3,9 @@ using UnityEngine;
 namespace CatCafe
 {
     /// <summary>
-    /// 保温台表现层：在保温台上方显示每杯咖啡图标 + 新鲜度进度条。
-    /// 每帧从 GameFlow.Warmer 读取杯数，动态生成/销毁咖啡杯图标。
+    /// 保温台表现层：成品咖啡杯放在保温台台面上（方块内部），
+    /// 每杯上方贴着一条新鲜度进度条。
+    /// 父物体(保温台 Station) localScale=1.6，这里用局部坐标 + 缩放补偿。
     /// </summary>
     public class WarmerView : MonoBehaviour
     {
@@ -26,11 +27,13 @@ namespace CatCafe
                 _cupIcons.RemoveAt(_cupIcons.Count - 1);
             }
 
+            // 重新排布（居中，放在台面内部）
+            LayoutCups();
+
             // 更新每个图标的新鲜度条
             for (int i = 0; i < count; i++)
             {
-                var icon = _cupIcons[i];
-                var bar = icon.GetComponentInChildren<WorldBar>();
+                var bar = _cupIcons[i].GetComponentInChildren<WorldBar>();
                 if (bar != null)
                     bar.SetProgress(warmer.Cups[i].Freshness);
             }
@@ -40,20 +43,31 @@ namespace CatCafe
         {
             var icon = new GameObject("CupIcon", typeof(SpriteRenderer));
             icon.transform.SetParent(transform, false);
-            icon.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+            // 杯身世界尺寸 0.5×0.5，父 scale=1.6 → 局部 0.3125
+            float s = 0.5f / 1.6f;
+            icon.transform.localScale = new Vector3(s, s, 1f);
             var sr = icon.GetComponent<SpriteRenderer>();
             sr.sprite = SpriteUtil.White;
             sr.color = new Color(0.7f, 0.5f, 0.3f); // 咖啡色杯身
             sr.sortingOrder = 6;
 
-            // 图标排成一排（世界坐标，父保温台 scale=1.6，需除以补偿）
-            float worldX = (_cupIcons.Count - 1) * 0.6f;
-            icon.transform.localPosition = new Vector3(worldX / 1.6f, 1.2f / 1.6f, 0f);
-
-            // 新鲜度条：宽 0.5 与杯身同宽，在杯子上方 0.5 处
-            WorldBar.Create(icon.transform, new Vector3(0f, 1.0f, 0f), 0.5f, 0.08f, new Color(0.3f, 0.9f, 0.4f));
+            // 新鲜度条：贴在杯子上缘（杯图标局部坐标系，杯半高=0.5）
+            WorldBar.Create(icon.transform, new Vector3(0f, 0.5f, 0f), 0.5f, 0.08f, new Color(0.3f, 0.9f, 0.4f));
 
             _cupIcons.Add(icon);
+        }
+
+        private void LayoutCups()
+        {
+            int n = _cupIcons.Count;
+            if (n == 0) return;
+            // 世界坐标：杯子居中排布在台面上，间距 0.55
+            for (int i = 0; i < n; i++)
+            {
+                float worldX = (i - (n - 1) / 2f) * 0.55f;
+                float worldY = 0.1f; // 台面中心略偏上
+                _cupIcons[i].transform.localPosition = new Vector3(worldX / 1.6f, worldY / 1.6f, 0f);
+            }
         }
     }
 }
