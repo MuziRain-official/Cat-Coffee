@@ -87,7 +87,8 @@ namespace CatCafe
             // —— 吧台设备一字排开（做咖啡少跑路）——
             var coffee = MakeStation("CoffeeMachine", CoffeeMachinePos, new Vector2(1.6f, 1.6f), new Color(0.4f, 0.3f, 0.25f), StationType.CoffeeMachine, "coffee_machine");
             coffee.AddComponent<CoffeeMachineView>(); // 萃取读条
-            MakeStation("Frother", FrotherPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.6f), StationType.Frother, "frother");
+            var frother = MakeStation("Frother", FrotherPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.6f), StationType.Frother, "frother");
+            frother.AddComponent<FrothGameView>(); // 下落音符表现层
             MakeStation("Counter", CounterPos, new Vector2(1.6f, 1.6f), new Color(0.5f, 0.45f, 0.35f), StationType.Counter, "counter");
             var warmer = MakeStation("Warmer", WarmerPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.4f), StationType.Warmer, "warmer");
             warmer.AddComponent<WarmerView>(); // 每杯新鲜度条
