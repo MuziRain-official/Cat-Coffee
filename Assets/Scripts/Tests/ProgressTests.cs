@@ -27,17 +27,17 @@ namespace CatCafe.Tests
         public void BuyItem_DeductsCoinsAndMarksOwned()
         {
             var p = new Progress(1, 500, null);
-            Assert.IsTrue(p.BuyItem(ItemType.QuickServe)); // 100
-            Assert.AreEqual(400, p.TotalCoins);
+            Assert.IsTrue(p.BuyItem(ItemType.QuickServe)); // 300
+            Assert.AreEqual(200, p.TotalCoins);
             Assert.IsTrue(p.HasItem(ItemType.QuickServe));
         }
 
         [Test]
         public void BuyItem_FailsWhenInsufficientCoins()
         {
-            var p = new Progress(1, 50, null);
-            Assert.IsFalse(p.BuyItem(ItemType.ExtraTables)); // 300
-            Assert.AreEqual(50, p.TotalCoins);
+            var p = new Progress(1, 100, null);
+            Assert.IsFalse(p.BuyItem(ItemType.ExtraTables)); // 800
+            Assert.AreEqual(100, p.TotalCoins);
             Assert.IsFalse(p.HasItem(ItemType.ExtraTables));
         }
 
@@ -53,7 +53,7 @@ namespace CatCafe.Tests
         public void Json_RoundTrips()
         {
             var p = new Progress();
-            p.EndDay(120);
+            p.EndDay(500); // 攒够买 QuickServe(300)
             p.BuyItem(ItemType.QuickServe);
 
             var json = p.ToJson();

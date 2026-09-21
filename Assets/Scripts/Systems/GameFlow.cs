@@ -133,11 +133,14 @@ namespace CatCafe
             return true;
         }
 
-        /// <summary>装杯。</summary>
+        /// <summary>装杯。猫爪咖啡装杯后立即启动拉花游戏。</summary>
         public bool Cup()
         {
             if (_order.Step != OrderStep.HoldingIngredients) return false;
             _order.Cup();
+            // 猫爪咖啡装杯后直接进入拉花游戏（Order.Cup 已置为 LatteArt 状态）
+            if (_order.Step == OrderStep.LatteArt)
+                _latteArtGame.Start(_config.latteArtCellInterval);
             return true;
         }
 

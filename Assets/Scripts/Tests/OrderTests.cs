@@ -47,10 +47,7 @@ namespace CatCafe.Tests
             o.TickExtract(ExtractSeconds, ExtractSeconds);
             o.Pickup();
             o.Cup();
-            Assert.AreEqual(OrderStep.ReadyToLatteArt, o.Step); // 猫爪需拉花
-
-            o.StartLatteArt();
-            Assert.AreEqual(OrderStep.LatteArt, o.Step);
+            Assert.AreEqual(OrderStep.LatteArt, o.Step); // 猫爪装杯即进拉花
 
             o.CompleteLatteArt();
             Assert.AreEqual(OrderStep.ReadyToServe, o.Step);

@@ -15,25 +15,25 @@ namespace CatCafe
     {
         public static string Name(ItemType t) => t switch
         {
-            ItemType.QuickServe => "自动送餐",
-            ItemType.NoWait => "免读条",
-            ItemType.ExtraTables => "加两桌",
+            ItemType.QuickServe => "猫咪跑腿",
+            ItemType.NoWait => "猫咪加速",
+            ItemType.ExtraTables => "猫咪扩张",
             _ => "未知",
         };
 
         public static string Desc(ItemType t) => t switch
         {
-            ItemType.QuickServe => "手上持菜品时按 Q 直接送到最急的顾客手里",
-            ItemType.NoWait => "萃取/奶泡游戏后不再需要读条",
-            ItemType.ExtraTables => "场景增加两张桌子和四把椅子",
+            ItemType.QuickServe => "手上持菜品时按 Q，猫咪帮你送到最急的顾客手里",
+            ItemType.NoWait => "猫咪帮你盯着，萃取/奶泡后不再需要读条",
+            ItemType.ExtraTables => "猫咪帮你收拾出两张新桌子和四把椅子",
             _ => "",
         };
 
         public static int Price(ItemType t) => t switch
         {
-            ItemType.QuickServe => 100,
-            ItemType.NoWait => 200,
-            ItemType.ExtraTables => 300,
+            ItemType.QuickServe => 300,
+            ItemType.NoWait => 500,
+            ItemType.ExtraTables => 800,
             _ => 0,
         };
 

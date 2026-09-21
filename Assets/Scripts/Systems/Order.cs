@@ -94,12 +94,12 @@ namespace CatCafe
             Step = OrderStep.HoldingIngredients;
         }
 
-        /// <summary>装杯。猫爪咖啡装杯后进入 ReadyToLatteArt（需拉花），否则 ReadyToServe。</summary>
+        /// <summary>装杯。猫爪咖啡装杯后直接进入 LatteArt（拉花进行中），否则 ReadyToServe。</summary>
         public void Cup()
         {
             if (Step != OrderStep.HoldingIngredients) return;
             var t = Recipe;
-            Step = CatCafe.Recipe.NeedsLatteArt(t) ? OrderStep.ReadyToLatteArt : OrderStep.ReadyToServe;
+            Step = CatCafe.Recipe.NeedsLatteArt(t) ? OrderStep.LatteArt : OrderStep.ReadyToServe;
         }
 
         /// <summary>开始拉花（猫爪的收尾步骤）。</summary>

@@ -23,9 +23,19 @@ namespace CatCafe
             var dir = new Vector2(h, v);
             if (dir.sqrMagnitude > 1f) dir.Normalize();
 
+            var gm = GameManager.Instance;
+            if (gm != null && gm.Flow != null)
+            {
+                // 选择模式（商店/保温台/咖啡机选菜品）禁止移动
+                if (gm.Flow.IsWarmerSelecting || gm.Flow.IsShopOpen || gm.Flow.IsCoffeeSelecting)
+                {
+                    _rb.velocity = Vector2.zero;
+                    return;
+                }
+            }
+
             // 抱猫减速
             float speed = moveSpeed;
-            var gm = GameManager.Instance;
             if (gm != null && gm.Flow != null && gm.Flow.Cat.IsCarried)
                 speed *= 1f - gm.Config.carryCatSlow;
 

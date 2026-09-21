@@ -32,15 +32,13 @@ namespace CatCafe
             // 哪些状态表示"手里拿着东西"
             bool holding = order.Step == OrderStep.HoldingIngredients
                         || order.Step == OrderStep.ReadyToServe
-                        || order.Step == OrderStep.ReadyToLatteArt
                         || order.Step == OrderStep.LatteArt;
 
             _iconGo.SetActive(holding);
             if (holding)
             {
-                // 装杯后显示成品杯（含猫爪拉花），原料阶段显示原料杯
+                // 装杯后（含拉花中）显示成品杯，原料阶段显示原料杯
                 bool isFinished = order.Step == OrderStep.ReadyToServe
-                               || order.Step == OrderStep.ReadyToLatteArt
                                || order.Step == OrderStep.LatteArt;
                 _icon.sprite = isFinished
                     ? PixelArtGenerator.CupIcon(order.Recipe)

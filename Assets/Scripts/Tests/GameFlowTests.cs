@@ -102,10 +102,10 @@ namespace CatCafe.Tests
             Advance(_config.extractSeconds);
             Assert.IsTrue(_flow.Pickup());
             Assert.IsTrue(_flow.Cup());
-            // 猫爪装杯后不是 ReadyToServe，而是 ReadyToLatteArt
-            Assert.AreEqual(OrderStep.ReadyToLatteArt, _flow.Order.Step);
+            // 猫爪装杯后直接进入拉花游戏
+            Assert.AreEqual(OrderStep.LatteArt, _flow.Order.Step);
+            Assert.IsTrue(_flow.IsLatteArtGameActive);
 
-            Assert.IsTrue(_flow.StartLatteArt());
             Assert.IsTrue(_flow.StopLatteArt());
             Assert.AreEqual(OrderStep.ReadyToServe, _flow.Order.Step);
         }

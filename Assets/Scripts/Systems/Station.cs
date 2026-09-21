@@ -57,16 +57,14 @@ namespace CatCafe
                 Flow.Froth();                            // 空闲 → 做卡布
         }
 
-        /// <summary>装杯台：持原料→装杯；猫爪装杯后→开始拉花；拉花中→停。</summary>
+        /// <summary>装杯台：持原料→装杯(猫爪自动进拉花)；拉花中→停。</summary>
         private void CounterInteract()
         {
             if (Flow == null) return;
             if (Flow.IsLatteArtGameActive)
                 Flow.StopLatteArt();                     // 拉花中 → 停
             else if (Flow.Order.Step == OrderStep.HoldingIngredients)
-                Flow.Cup();                              // 持原料 → 装杯
-            else if (Flow.Order.Step == OrderStep.ReadyToLatteArt)
-                Flow.StartLatteArt();                    // 猫爪装杯后 → 开始拉花
+                Flow.Cup();                              // 持原料 → 装杯（猫爪自动进拉花）
         }
 
         /// <summary>保温台：手里有成品→放入；手里没东西→打开选择栏。</summary>
