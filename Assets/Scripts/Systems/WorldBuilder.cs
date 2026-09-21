@@ -92,11 +92,12 @@ namespace CatCafe
             MakeStation("Counter", CounterPos, new Vector2(1.6f, 1.6f), new Color(0.5f, 0.45f, 0.35f), StationType.Counter, "counter");
             var warmer = MakeStation("Warmer", WarmerPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.4f), StationType.Warmer, "warmer");
             warmer.AddComponent<WarmerView>(); // 每杯新鲜度条
+            warmer.AddComponent<WarmerSelectView>(); // 选择栏
 
-            // —— 3 张桌子（上方，围绕吧台）——
-            MakeFurniture("Table_A", new Vector3(-4.5f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f), "table");
-            MakeFurniture("Table_B", new Vector3(0f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f), "table");
-            MakeFurniture("Table_C", new Vector3(4.5f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f), "table");
+            // —— 3 张桌子（上方，围绕吧台，圆桌用方形scale保持圆形）——
+            MakeFurniture("Table_A", new Vector3(-4.5f, 3.6f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
+            MakeFurniture("Table_B", new Vector3(0f, 3.6f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
+            MakeFurniture("Table_C", new Vector3(4.5f, 3.6f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
 
             // —— 三个猫垫（无碰撞）+ 猫实体 ——
             BuildCatPadsAndCat();

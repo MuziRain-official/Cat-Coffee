@@ -51,6 +51,8 @@ namespace CatCafe
         public bool IsFrothGameActive => _frothGame.IsActive;
         public bool IsLatteArtGameActive => _latteArtGame.IsActive;
         public int WarmerCursor => _warmerCursor;
+        /// <summary>是否处于保温台选择模式（打开选择栏）。</summary>
+        public bool IsWarmerSelecting { get; private set; }
         public bool IsDayOver => _clock.IsDayOver(_config.dayDurationSeconds);
         public int ServedCount { get; private set; }
         public int LeftCount { get; private set; }
@@ -180,6 +182,25 @@ namespace CatCafe
         {
             if (_warmer.Count == 0) { _warmerCursor = 0; return; }
             _warmerCursor = (_warmerCursor + delta + _warmer.Count) % _warmer.Count;
+        }
+
+        /// <summary>打开保温台选择栏（进入选择模式）。</summary>
+        public void OpenWarmerSelect()
+        {
+            if (_warmer.Count == 0) return;
+            IsWarmerSelecting = true;
+        }
+
+        /// <summary>关闭选择栏（不取）。</summary>
+        public void CloseWarmerSelect() => IsWarmerSelecting = false;
+
+        /// <summary>选择模式下确认拿起光标杯。</summary>
+        public bool ConfirmWarmerSelect()
+        {
+            if (!IsWarmerSelecting) return false;
+            bool ok = TakeFromWarmerAt(_warmerCursor);
+            IsWarmerSelecting = false;
+            return ok;
         }
 
         public void FeedCat() { }

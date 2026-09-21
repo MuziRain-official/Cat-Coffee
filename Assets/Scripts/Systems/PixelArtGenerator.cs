@@ -145,21 +145,30 @@ namespace CatCafe
         public static Sprite Player()
         {
             var c = new PixelCanvas(N);
-            // 头
-            c.FillCircle(8, 4, 3, PixelPalette.Skin);
-            // 头发
-            c.FillRect(5, 1, 11, 4, PixelPalette.HairBrown);
-            c.FillRect(6, 1, 10, 2, PixelPalette.HairBrown);
-            // 眼睛
-            c.FillRect(6, 4, 7, 5, PixelPalette.DarkWood);
-            c.FillRect(9, 4, 10, 5, PixelPalette.DarkWood);
-            // 身体（围裙）
-            c.FillRect(5, 7, 11, 13, PixelPalette.Blue);
-            c.FillRect(6, 8, 10, 13, PixelPalette.Cream); // 围裙
-            c.FillRect(5, 7, 11, 8, PixelPalette.Cream);  // 围裙带
-            // 手臂
-            c.FillRect(3, 8, 5, 11, PixelPalette.Blue);
-            c.FillRect(11, 8, 13, 11, PixelPalette.Blue);
+            // 头发（更圆润的刘海 + 双马尾）
+            c.FillCircle(8, 3, 4, PixelPalette.HairBrown);
+            c.FillRect(5, 1, 11, 4, PixelPalette.HairBrown); // 头顶
+            // 双马尾（两侧）
+            c.FillRect(3, 3, 5, 8, PixelPalette.HairBrown);
+            c.FillRect(11, 3, 13, 8, PixelPalette.HairBrown);
+            // 脸
+            c.FillCircle(8, 5, 3, PixelPalette.Skin);
+            // 眼睛（大而圆）
+            c.FillRect(6, 5, 7, 6, PixelPalette.DarkWood);
+            c.FillRect(9, 5, 10, 6, PixelPalette.DarkWood);
+            // 腮红
+            c.Set(5, 7, PixelPalette.LightOrange);
+            c.Set(10, 7, PixelPalette.LightOrange);
+            // 身体（围裙，圆润）
+            c.FillRect(5, 8, 11, 14, PixelPalette.Cream); // 围裙主体
+            c.FillRect(4, 8, 12, 9, PixelPalette.CreamDark); // 围裙上沿
+            // 围裙口袋
+            c.FillRect(6, 10, 10, 12, PixelPalette.CreamDark);
+            // 蝴蝶结
+            c.FillRect(7, 8, 9, 9, PixelPalette.Red);
+            // 手臂（更自然）
+            c.FillRect(3, 9, 5, 12, PixelPalette.CreamDark);
+            c.FillRect(11, 9, 13, 12, PixelPalette.CreamDark);
             return c.ToSprite();
         }
 

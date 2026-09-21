@@ -30,28 +30,30 @@ namespace CatCafe
             }
         }
 
-        /// <summary>咖啡机：空闲→做拿铁（默认）；萃取好→取原料；小游戏中→停指针。</summary>
+        /// <summary>咖啡机：空闲→做拿铁；萃取好→取原料(仅拿铁/猫爪)；小游戏中→停指针。</summary>
         private void CoffeeMachineInteract()
         {
             if (Flow == null) return;
             if (Flow.IsBrewGameActive)
                 Flow.StopBrewGame();                     // 小游戏进行中 → 停指针
-            else if (Flow.Order.Step == OrderStep.ReadyToPickup)
-                Flow.Pickup();                           // 萃取好了 → 取原料
-            else
+            else if (Flow.Order.Step == OrderStep.ReadyToPickup
+                     && (Flow.Order.Recipe == RecipeType.Latte || Flow.Order.Recipe == RecipeType.CatPaw))
+                Flow.Pickup();                           // 萃取好了且是咖啡机菜品 → 取原料
+            else if (Flow.Order.Step == OrderStep.None)
                 Flow.Brew(RecipeType.Latte);             // 空闲 → 做拿铁
         }
 
-        /// <summary>奶泡机：空闲→做卡布奇诺；连击结束→自动结算；ReadyToPickup→取原料。</summary>
+        /// <summary>奶泡机：空闲→做卡布；音游中→按E判定；ReadyToPickup且是卡布→取原料。</summary>
         private void FrotherInteract()
         {
             if (Flow == null) return;
             if (Flow.IsFrothGameActive)
-                Flow.TapFroth();                         // 连击拍
-            else if (Flow.Order.Step == OrderStep.ReadyToPickup)
-                Flow.Pickup();
-            else
-                Flow.Froth();                            // 空闲 → 打奶泡
+                Flow.TapFroth();                         // 音游中 → 按E判定
+            else if (Flow.Order.Step == OrderStep.ReadyToPickup
+                     && Flow.Order.Recipe == RecipeType.Cappuccino)
+                Flow.Pickup();                           // 奶泡好且是卡布 → 取原料
+            else if (Flow.Order.Step == OrderStep.None)
+                Flow.Froth();                            // 空闲 → 做卡布
         }
 
         /// <summary>装杯台：持原料→装杯；猫爪装杯后→开始拉花；拉花中→停。</summary>
@@ -66,14 +68,14 @@ namespace CatCafe
                 Flow.StartLatteArt();                    // 猫爪装杯后 → 开始拉花
         }
 
-        /// <summary>保温台：手里有成品→放入；手里没东西→按光标取一杯。</summary>
+        /// <summary>保温台：手里有成品→放入；手里没东西→打开选择栏。</summary>
         private void WarmerInteract()
         {
             if (Flow == null) return;
             if (Flow.Order.Step == OrderStep.ReadyToServe)
                 Flow.StoreToWarmer();                    // 手里有成品 → 备餐放入
             else
-                Flow.TakeFromWarmerAt(Flow.WarmerCursor);// 手里没东西 → 取光标指向的那杯
+                Flow.OpenWarmerSelect();                 // 手里没东西 → 打开选择栏
         }
 
         public void OnInteractSecondary()

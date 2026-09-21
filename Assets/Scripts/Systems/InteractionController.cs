@@ -10,6 +10,18 @@ namespace CatCafe
     {
         private void Update()
         {
+            var flow = GameManager.Instance?.Flow;
+
+            // 保温台选择模式：A/D 移动，F 确认，E 关闭
+            if (flow != null && flow.IsWarmerSelecting)
+            {
+                if (Input.GetKeyDown(KeyCode.A)) flow.MoveWarmerCursor(-1);
+                if (Input.GetKeyDown(KeyCode.D)) flow.MoveWarmerCursor(+1);
+                if (Input.GetKeyDown(KeyCode.F)) flow.ConfirmWarmerSelect();
+                if (Input.GetKeyDown(KeyCode.E)) flow.CloseWarmerSelect();
+                return; // 选择模式下不再走普通交互
+            }
+
             if (Input.GetKeyDown(KeyCode.E)) Interact(0);
             if (Input.GetKeyDown(KeyCode.Q)) Interact(1);
             if (Input.GetKeyDown(KeyCode.R)) Interact(2);
