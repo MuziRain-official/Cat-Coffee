@@ -16,6 +16,7 @@ namespace CatCafe
         private readonly DayLedger _ledger;
         private readonly List<Customer> _customers = new List<Customer>();
         private readonly Order _order = new Order();
+        private readonly BrewGame _brewGame = new BrewGame();
         private readonly System.Random _rng;
 
         private float _spawnTimer;
@@ -36,6 +37,8 @@ namespace CatCafe
         public DayLedger Ledger => _ledger;
         public IReadOnlyList<Customer> Customers => _customers;
         public Order Order => _order;
+        public BrewGame BrewGame => _brewGame;
+        public bool IsBrewGameActive => _brewGame.IsActive;
         public bool IsDayOver => _clock.IsDayOver(_config.dayDurationSeconds);
         public int ServedCount { get; private set; }
         /// <summary>累计流失顾客数（未付费）。</summary>
@@ -54,12 +57,22 @@ namespace CatCafe
 
         // —— 玩家操作 ——
 
-        /// <summary>开始萃取（第 1 步）。设备空闲时有效。</summary>
+        /// <summary>开始萃取（第 1 步）：启动时机条小游戏。</summary>
         public bool Brew()
         {
             if (_order.Step != OrderStep.None) return false;
             _order.StartBrewing();
+            _brewGame.Start();
             _ledger.RecordCost(_config.coffeeCost); // 制作时扣成本
+            return true;
+        }
+
+        /// <summary>玩家停指针锁定品质（第 1 步完成）。仅在萃取小游戏进行中有效。</summary>
+        public bool StopBrewGame()
+        {
+            if (!_brewGame.IsActive) return false;
+            var quality = _brewGame.Stop(_config);
+            _order.CompleteBrew(quality);
             return true;
         }
 
@@ -111,7 +124,7 @@ namespace CatCafe
 
             _clock.Tick(deltaTime);
             _cat.Tick(deltaTime, _config);
-            _order.Tick(deltaTime, _config.brewSeconds);
+            _brewGame.Tick(deltaTime, _config.swingSpeed); // 推进萃取时机条摆动
 
             int paidThisFrame = 0;
             SpawnIfDue(deltaTime);
@@ -122,7 +135,7 @@ namespace CatCafe
                 c.Tick(deltaTime);
                 if (c.Phase == CustomerPhase.Paid)
                 {
-                    int price = PriceWithMood();
+                    int price = PriceFor(c.ServedQuality);
                     _ledger.RecordRevenue(price);
                     paidThisFrame++;
                 }
@@ -136,8 +149,17 @@ namespace CatCafe
             return paidThisFrame;
         }
 
-        private int PriceWithMood() =>
-            Math.Max(0, (int)Math.Round(_config.coffeePrice * MoodMultiplier));
+        /// <summary>售价 = 基础价 × 品质倍率 × 心情系数（向下取整到 0 以上）。</summary>
+        private int PriceFor(BrewQuality quality)
+        {
+            float qMult = quality switch
+            {
+                BrewQuality.Perfect => _config.perfectPriceMult,
+                BrewQuality.Poor => _config.poorPriceMult,
+                _ => _config.goodPriceMult,
+            };
+            return Math.Max(0, (int)Math.Round(_config.coffeePrice * qMult * MoodMultiplier));
+        }
 
         private void SpawnIfDue(float deltaTime)
         {

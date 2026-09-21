@@ -4,40 +4,35 @@ namespace CatCafe
     public enum OrderStep
     {
         None,               // 未开始
-        Brewing,            // 第 1 步：萃取中（读条，原料在咖啡机里）
-        ReadyToPickup,      // 萃取完成，原料在咖啡机，需回咖啡机取
+        Brewing,            // 萃取小游戏进行中（玩家在时机条里）
+        ReadyToPickup,      // 品质锁定，咖啡液在咖啡机，需回咖啡机取
         HoldingIngredients, // 主角持原料，需到装杯台装杯
         ReadyToServe,       // 装杯完成，主角持成品，需上菜
     }
 
     /// <summary>
     /// 订单（纯逻辑，可单元测试）。固定工序 4 步：
-    /// 萃取(读条) → 回咖啡机取原料 → 装杯 → 上菜。
+    /// 萃取小游戏 → 回咖啡机取原料 → 装杯 → 上菜。
     /// </summary>
     public class Order
     {
         public OrderStep Step { get; private set; } = OrderStep.None;
 
-        /// <summary>萃取读条进度 0–1。</summary>
-        public float BrewProgress { get; private set; }
+        /// <summary>本杯咖啡的品质（萃取小游戏锁定，上菜时用于计价）。</summary>
+        public BrewQuality Quality { get; private set; } = BrewQuality.Good;
 
-        /// <summary>开始第 1 步：萃取。</summary>
+        /// <summary>开始第 1 步：萃取小游戏。</summary>
         public void StartBrewing()
         {
             Step = OrderStep.Brewing;
-            BrewProgress = 0f;
         }
 
-        /// <summary>推进萃取读条，完成后进入 ReadyToPickup（原料留在咖啡机）。</summary>
-        public void Tick(float deltaTime, float brewSeconds)
+        /// <summary>小游戏停指针后，锁定品质并进入 ReadyToPickup。仅在萃取中有效。</summary>
+        public void CompleteBrew(BrewQuality quality)
         {
             if (Step != OrderStep.Brewing) return;
-            BrewProgress += deltaTime / brewSeconds;
-            if (BrewProgress >= 1f)
-            {
-                BrewProgress = 1f;
-                Step = OrderStep.ReadyToPickup;
-            }
+            Quality = quality;
+            Step = OrderStep.ReadyToPickup;
         }
 
         /// <summary>回咖啡机取原料。仅在萃取完成后有效。</summary>
@@ -54,13 +49,13 @@ namespace CatCafe
             Step = OrderStep.ReadyToServe;
         }
 
-        /// <summary>上菜给顾客。成功返回 true 并复位订单。</summary>
+        /// <summary>上菜给顾客。成功返回 true 并复位订单，同时把品质写进顾客。</summary>
         public bool Serve(Customer customer, float eatingSeconds)
         {
             if (Step != OrderStep.ReadyToServe) return false;
             if (customer == null || customer.Phase != CustomerPhase.Waiting) return false;
 
-            customer.Serve(eatingSeconds);
+            customer.Serve(eatingSeconds, Quality);
             Step = OrderStep.None;
             return true;
         }

@@ -25,13 +25,14 @@ namespace CatCafe.Tests
         public void Serve_MovesToEating_OnlyWhenWaiting()
         {
             var c = new Customer();
-            c.Serve(12f); // 未点单，忽略
+            c.Serve(12f, BrewQuality.Good); // 未点单，忽略
             Assert.AreEqual(CustomerPhase.Entering, c.Phase);
 
             c.PlaceOrder(45f);
-            c.Serve(12f);
+            c.Serve(12f, BrewQuality.Perfect);
             Assert.AreEqual(CustomerPhase.Eating, c.Phase);
             Assert.AreEqual(12f, c.RemainingEating);
+            Assert.AreEqual(BrewQuality.Perfect, c.ServedQuality);
         }
 
         [Test]
@@ -50,7 +51,7 @@ namespace CatCafe.Tests
         {
             var c = new Customer();
             c.PlaceOrder(45f);
-            c.Serve(12f);
+            c.Serve(12f, BrewQuality.Good);
             c.Tick(12f);
             Assert.AreEqual(CustomerPhase.Paid, c.Phase);
             Assert.IsTrue(c.HasPaid);

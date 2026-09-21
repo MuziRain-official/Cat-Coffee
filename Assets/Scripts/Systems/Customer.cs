@@ -24,6 +24,9 @@ namespace CatCafe
         /// <summary>剩余用餐时间（秒），仅 Eating 有效。</summary>
         public float RemainingEating { get; private set; }
 
+        /// <summary>本单咖啡品质（上菜时锁定，付费时用于计价）。</summary>
+        public BrewQuality ServedQuality { get; private set; } = BrewQuality.Good;
+
         /// <summary>是否已付费（成功完成一单）。</summary>
         public bool HasPaid => Phase == CustomerPhase.Paid;
 
@@ -37,12 +40,13 @@ namespace CatCafe
             RemainingPatience = patienceSeconds;
         }
 
-        /// <summary>上菜，进入用餐。仅在等待中有效。</summary>
-        public void Serve(float eatingSeconds)
+        /// <summary>上菜，进入用餐并锁定品质。仅在等待中有效。</summary>
+        public void Serve(float eatingSeconds, BrewQuality quality)
         {
             if (Phase != CustomerPhase.Waiting) return;
             Phase = CustomerPhase.Eating;
             RemainingEating = eatingSeconds;
+            ServedQuality = quality;
         }
 
         /// <summary>推进状态机。</summary>

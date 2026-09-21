@@ -42,6 +42,7 @@ namespace CatCafe.Tests
             Assert.IsTrue(_flow.Brew());
             Assert.AreEqual(_config.coffeeCost, _flow.Ledger.Cost);
             Assert.AreEqual(OrderStep.Brewing, _flow.Order.Step);
+            Assert.IsTrue(_flow.IsBrewGameActive);
         }
 
         [Test]
@@ -52,13 +53,23 @@ namespace CatCafe.Tests
         }
 
         [Test]
+        public void StopBrewGame_LocksQualityAndReadyToPickup()
+        {
+            Assert.IsTrue(_flow.Brew());
+            Advance(0.5f); // 让指针动一下
+            Assert.IsTrue(_flow.StopBrewGame());
+            Assert.IsFalse(_flow.IsBrewGameActive);
+            Assert.AreEqual(OrderStep.ReadyToPickup, _flow.Order.Step);
+        }
+
+        [Test]
         public void FullServeCycle_PaysAndRecordsRevenue()
         {
             Advance(10f); // 生成 1 位顾客
             Assert.GreaterOrEqual(_flow.Customers.Count, 1);
 
             Assert.IsTrue(_flow.Brew());
-            Advance(_config.brewSeconds); // 萃取完成 → ReadyToPickup
+            Assert.IsTrue(_flow.StopBrewGame()); // 停指针锁定品质 → ReadyToPickup
             Assert.IsTrue(_flow.Pickup());  // 取原料
             Assert.IsTrue(_flow.Cup());     // 装杯
             Assert.IsTrue(_flow.ServeToEarliestWaiting()); // 上菜

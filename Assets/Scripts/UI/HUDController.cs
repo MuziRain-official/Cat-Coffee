@@ -51,8 +51,8 @@ namespace CatCafe
             _orderText.text = flow.Order.Step switch
             {
                 OrderStep.None => "订单：空闲",
-                OrderStep.Brewing => $"订单：萃取中 {Mathf.CeilToInt(flow.Order.BrewProgress * 100)}%",
-                OrderStep.ReadyToPickup => "订单：萃取好，回咖啡机取原料",
+                OrderStep.Brewing => $"订单：萃取中（时机条，再按E停）",
+                OrderStep.ReadyToPickup => $"订单：萃取好[{QualityLabel(flow.Order.Quality)}]，回咖啡机取原料",
                 OrderStep.HoldingIngredients => "订单：持原料，到装杯台装杯",
                 OrderStep.ReadyToServe => "订单：持成品，上菜给顾客",
                 _ => ""
@@ -65,6 +65,13 @@ namespace CatCafe
             if (flow.MoodMultiplier < 1f) return "惩罚";
             return "正常";
         }
+
+        private static string QualityLabel(BrewQuality q) => q switch
+        {
+            BrewQuality.Perfect => "完美",
+            BrewQuality.Poor => "勉强",
+            _ => "良好",
+        };
 
         private void BuildUI()
         {

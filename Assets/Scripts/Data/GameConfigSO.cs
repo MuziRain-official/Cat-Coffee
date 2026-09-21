@@ -27,10 +27,19 @@ namespace CatCafe
         [Tooltip("用餐时长（秒），上菜后付费离开")]
         public float customerEatingSeconds = 12f;
 
-        [Header("制作（固定工序 2 步）")]
-        [Tooltip("萃取读条（秒），第 1 步：咖啡机")]
-        public float brewSeconds = 2.5f;
-        // 装杯与上菜为即时，无读条
+        [Header("制作（萃取时机条小游戏）")]
+        [Tooltip("指针摆动速度（弧度/秒）")]
+        public float swingSpeed = 3f;
+        [Tooltip("完美区半宽（指针离中心 0.5 多近算完美）")]
+        public float perfectHalfWidth = 0.12f;
+        [Tooltip("良好区半宽（超过完美区但在此内算良好）")]
+        public float goodHalfWidth = 0.30f;
+        [Tooltip("完美品质售价倍率")]
+        public float perfectPriceMult = 1.3f;
+        [Tooltip("良好品质售价倍率")]
+        public float goodPriceMult = 1.0f;
+        [Tooltip("勉强品质售价倍率")]
+        public float poorPriceMult = 0.7f;
 
         [Header("猫咪系统")]
         public float catStatMin = 0f;
