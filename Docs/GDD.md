@@ -172,9 +172,9 @@
 ## 8. 美术风格（P5 已定稿）
 
 ### 风格定位
-**东方夜雀食堂式像素风 + 奶油复古色 + 无描边**
+**东方夜雀食堂式像素风 + 奶油复古色 + 无描边 + 二次元像素感**
 
-- 像素颗粒质感，复古温馨，参考《东方夜雀食堂》《Cafe Master Story》
+- 二次元像素风：角色/物件带日式二次元可爱感，像素颗粒质感，参考《东方夜雀食堂》《Cafe Master Story》
 - 奶油复古色调：奶油白、暖棕、淡橙、抹茶绿，低饱和、柔和
 - 无描边，色块直接相接，柔和治愈
 - 2D 正俯视，几何感清晰
@@ -182,20 +182,20 @@
 ### 风格锁（P5 生成所有图必须用这个统一 prompt 前缀）
 
 ```
-pixel art, top-down view, cozy cat cafe, cream and warm brown retro palette,
+anime pixel art, top-down view, cozy cat cafe, cream and warm brown retro palette,
 soft low-saturation colors, no outline, clean shapes, warm cozy atmosphere,
-game asset sprite
+cute anime style, game asset sprite
 ```
 
 后续 `generate_image` 时，把具体物体描述接在此前缀之后，例如：
-`...前缀... , a coffee machine on a counter, 48x48 pixel sprite`
+`...前缀... , a coffee machine on a counter`
 
 ### 资产清单（P5 待生成）
 - 主角（猫咖店员）
 - 猫（不同毛色）
 - 咖啡机 / 装杯台 / 保温台
 - 桌子 / 椅子
-- 咖啡杯（成品）
+- **咖啡杯（成品，玩家端着走）**
 - 地板 / 墙壁
 - 顾客（多种）
 - 猫窝 / 猫垫

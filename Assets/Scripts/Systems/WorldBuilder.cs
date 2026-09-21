@@ -69,8 +69,7 @@ namespace CatCafe
 
         private void BuildFloor()
         {
-            NewSprite("Floor", new Vector3(0f, 0f, 0f), new Vector2(RoomW, RoomH),
-                new Color(0.78f, 0.71f, 0.58f), -2);
+            NewArtObject("Floor", "floor", new Vector3(0f, 0f, 0f), new Vector2(RoomW, RoomH), new Color(0.78f, 0.71f, 0.58f), -2);
         }
 
         private void BuildWalls()
@@ -85,37 +84,37 @@ namespace CatCafe
         private void BuildFurniture()
         {
             // —— 吧台三件套抱团（做咖啡少跑路）——
-            var coffee = MakeStation("CoffeeMachine", CoffeeMachinePos, new Vector2(1.6f, 1.6f), new Color(0.4f, 0.3f, 0.25f), StationType.CoffeeMachine);
+            var coffee = MakeStation("CoffeeMachine", CoffeeMachinePos, new Vector2(1.6f, 1.6f), new Color(0.4f, 0.3f, 0.25f), StationType.CoffeeMachine, "coffee_machine");
             coffee.AddComponent<CoffeeMachineView>(); // 萃取读条
-            MakeStation("Counter", CounterPos, new Vector2(1.6f, 1.6f), new Color(0.5f, 0.45f, 0.35f), StationType.Counter);
-            var warmer = MakeStation("Warmer", WarmerPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.4f), StationType.Warmer);
+            MakeStation("Counter", CounterPos, new Vector2(1.6f, 1.6f), new Color(0.5f, 0.45f, 0.35f), StationType.Counter, "counter");
+            var warmer = MakeStation("Warmer", WarmerPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.4f), StationType.Warmer, "warmer");
             warmer.AddComponent<WarmerView>(); // 每杯新鲜度条
 
             // —— 3 张桌子（上方，围绕吧台）——
-            MakeFurniture("Table_A", new Vector3(-4.5f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));
-            MakeFurniture("Table_B", new Vector3(0f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));
-            MakeFurniture("Table_C", new Vector3(4.5f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));
+            MakeFurniture("Table_A", new Vector3(-4.5f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f), "table");
+            MakeFurniture("Table_B", new Vector3(0f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f), "table");
+            MakeFurniture("Table_C", new Vector3(4.5f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f), "table");
 
             // —— 三个猫垫（无碰撞）+ 猫实体 ——
             BuildCatPadsAndCat();
 
             // 6 个座位标记（无碰撞）
             for (int i = 0; i < Seats.Length; i++)
-                NewSprite("Seat_" + i, Seats[i], new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
+                NewArtObject("Seat_" + i, "chair", Seats[i], new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
         }
 
         private void BuildCatPadsAndCat()
         {
             // 默认猫窝（Nest，猫初始位置）
-            NewSprite("CatNest", CatNestPos, new Vector2(1.2f, 1.2f), new Color(0.85f, 0.6f, 0.5f), -1);
+            NewArtObject("CatNest", "cat_nest", CatNestPos, new Vector2(1.2f, 1.2f), new Color(0.85f, 0.6f, 0.5f), -1);
 
             // 三个猫垫（带 CatPad 组件）
             MakeCatPad("CatPad_Bar", CatPadBarPos, new Color(0.4f, 0.7f, 0.5f), CatZone.Bar);
             MakeCatPad("CatPad_Seat", CatPadSeatPos, new Color(0.4f, 0.6f, 0.8f), CatZone.Seat);
             MakeCatPad("CatPad_Door", CatPadDoorPos, new Color(0.8f, 0.7f, 0.4f), CatZone.Door);
 
-            // 猫实体（橙色，带 CatView 交互）
-            var cat = NewSprite("Cat", CatNestPos, new Vector2(0.9f, 0.9f), new Color(0.95f, 0.6f, 0.25f), 4);
+            // 猫实体（贴图）
+            var cat = NewArtObject("Cat", "cat", CatNestPos, new Vector2(0.9f, 0.9f), new Color(0.95f, 0.6f, 0.25f), 4);
             cat.AddComponent<CatView>();
         }
 
@@ -128,7 +127,7 @@ namespace CatCafe
 
         private void BuildPlayer()
         {
-            var player = NewSprite("Player", PlayerSpawnPos, new Vector2(0.9f, 0.9f), new Color(0.3f, 0.8f, 0.7f), 5);
+            var player = NewArtObject("Player", "player", PlayerSpawnPos, new Vector2(0.9f, 0.9f), new Color(0.3f, 0.8f, 0.7f), 5);
             var rb = player.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
@@ -140,20 +139,22 @@ namespace CatCafe
 
         private void MakeWall(Vector3 pos, Vector2 size)
         {
-            var go = NewSprite("Wall", pos, size, new Color(0.4f, 0.35f, 0.3f), 0);
+            var go = NewArtObject("Wall", "wall", pos, size, new Color(0.4f, 0.35f, 0.3f), 0);
             go.AddComponent<BoxCollider2D>();
         }
 
-        private GameObject MakeFurniture(string name, Vector3 pos, Vector2 size, Color color)
+        private GameObject MakeFurniture(string name, Vector3 pos, Vector2 size, Color color, string artName = null)
         {
-            var go = NewSprite(name, pos, size, color, 0);
+            var go = string.IsNullOrEmpty(artName)
+                ? NewSprite(name, pos, size, color, 0)
+                : NewArtObject(name, artName, pos, size, color, 0);
             go.AddComponent<BoxCollider2D>();
             return go;
         }
 
-        private GameObject MakeStation(string name, Vector3 pos, Vector2 size, Color color, StationType type)
+        private GameObject MakeStation(string name, Vector3 pos, Vector2 size, Color color, StationType type, string artName = null)
         {
-            var go = MakeFurniture(name, pos, size, color);
+            var go = MakeFurniture(name, pos, size, color, artName);
             var st = go.AddComponent<Station>();
             st.Type = type;
             return go;
@@ -168,6 +169,14 @@ namespace CatCafe
             sr.sprite = WhiteSprite();
             sr.color = color;
             sr.sortingOrder = sortingOrder;
+            return go;
+        }
+
+        /// <summary>创建带贴图的物体（加载失败回退到色块）。</summary>
+        private GameObject NewArtObject(string name, string artName, Vector3 pos, Vector2 size, Color fallbackColor, int sortingOrder)
+        {
+            var go = NewSprite(name, pos, size, fallbackColor, sortingOrder);
+            ArtLoader.Apply(go.GetComponent<SpriteRenderer>(), artName);
             return go;
         }
 

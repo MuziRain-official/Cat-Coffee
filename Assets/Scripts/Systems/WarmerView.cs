@@ -47,9 +47,10 @@ namespace CatCafe
             float s = 0.5f / 1.6f;
             icon.transform.localScale = new Vector3(s, s, 1f);
             var sr = icon.GetComponent<SpriteRenderer>();
-            sr.sprite = SpriteUtil.White;
-            sr.color = new Color(0.7f, 0.5f, 0.3f); // 咖啡色杯身
             sr.sortingOrder = 6;
+            ArtLoader.Apply(sr, "coffee_cup"); // 咖啡杯贴图，失败回退色块
+            if (sr.sprite == SpriteUtil.White)
+                sr.color = new Color(0.7f, 0.5f, 0.3f); // 回退：咖啡色杯身
 
             // 新鲜度条：贴在杯子上缘（杯图标局部坐标系，杯半高=0.5）
             WorldBar.Create(icon.transform, new Vector3(0f, 0.5f, 0f), 0.5f, 0.08f, new Color(0.3f, 0.9f, 0.4f));

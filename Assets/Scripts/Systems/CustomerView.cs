@@ -30,9 +30,12 @@ namespace CatCafe
         {
             var go = new GameObject("Customer", typeof(SpriteRenderer), typeof(CustomerView));
             go.transform.position = seatPos;
+            go.transform.localScale = new Vector3(0.9f, 0.9f, 1f);
             var sr = go.GetComponent<SpriteRenderer>();
-            sr.sprite = SpriteUtil.White;
             sr.sortingOrder = 3;
+            ArtLoader.Apply(sr, "customer"); // 顾客贴图，失败回退色块
+            if (sr.sprite == SpriteUtil.White)
+                sr.color = WaitingColor;
 
             var view = go.GetComponent<CustomerView>();
             view.Customer = customer;
@@ -46,6 +49,13 @@ namespace CatCafe
         private void Update()
         {
             if (Customer == null) return;
+
+            // 有贴图时保持原色（耐心可视化后续用进度条补）；无贴图则用颜色表达状态
+            if (_body.sprite != SpriteUtil.White)
+            {
+                _body.color = Color.white;
+                return;
+            }
 
             switch (Customer.Phase)
             {
