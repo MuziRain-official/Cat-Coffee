@@ -58,6 +58,7 @@ namespace CatCafe
 
         private void Update()
         {
+            if (Flow == null) return; // 防御：未初始化时跳过
             if (State != GameState.Playing) return; // 菜单/结算时不跑游戏
 
             Flow.Tick(Time.deltaTime);
@@ -99,12 +100,7 @@ namespace CatCafe
         /// <summary>按进度显示/隐藏道具3的加桌。</summary>
         private void ApplyExtraTables()
         {
-            bool has = Progress.HasItem(ItemType.ExtraTables);
-            foreach (var name in new[] { "Table_D", "Table_E", "Seat_D1", "Seat_D2", "Seat_E1", "Seat_E2" })
-            {
-                var go = GameObject.Find(name);
-                if (go != null) go.SetActive(has);
-            }
+            WorldBuilder.SetExtraTablesVisible(Progress.HasItem(ItemType.ExtraTables));
         }
 
         /// <summary>回到主菜单。</summary>
@@ -161,11 +157,13 @@ namespace CatCafe
         public void ToggleFastForward() =>
             Flow.Clock.TimeScale = Flow.Clock.TimeScale > 1f ? 1f : Config.fastForwardMultiplier;
 
-        /// <summary>购买道具（永久，存档）。</summary>
+        /// <summary>购买道具（永久，存档）。购买后立即应用效果。</summary>
         public bool BuyItem(ItemType item)
         {
             if (!Progress.BuyItem(item)) return false;
             ProgressStore.Save(Progress);
+            if (item == ItemType.ExtraTables)
+                ApplyExtraTables(); // 立即显示加桌
             return true;
         }
 

@@ -43,9 +43,18 @@ namespace CatCafe
             }
 
             if (Input.GetKeyDown(KeyCode.E)) Interact(0);
-            if (Input.GetKeyDown(KeyCode.Q)) Interact(1);
+            if (Input.GetKeyDown(KeyCode.Q)) QuickServeOrInteract();
             if (Input.GetKeyDown(KeyCode.R)) Interact(2);
             if (Input.GetKeyDown(KeyCode.F)) Carry();
+        }
+
+        /// <summary>Q 键：手上持菜品且有"猫咪跑腿"道具时，优先自动送餐；否则走普通交互。</summary>
+        private void QuickServeOrInteract()
+        {
+            var flow = GameManager.Instance?.Flow;
+            if (flow != null && flow.QuickServe())
+                return; // 自动送餐成功
+            Interact(1);
         }
 
         /// <summary>商店购买当前道具。</summary>

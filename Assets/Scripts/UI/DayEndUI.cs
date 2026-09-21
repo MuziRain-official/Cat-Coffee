@@ -71,9 +71,9 @@ namespace CatCafe
 
             _dayEndRoot.SetActive(false);
 
-            // —— 右上角调试按钮 ——
-            MakeSmallButton("立即结束", new Vector2(1720, -50), font, () => GameManager.Instance?.DebugEndDay());
-            MakeSmallButton("+100金币", new Vector2(1720, -110), font, () => GameManager.Instance?.DebugAddCoins());
+            // —— 右上角调试按钮（锚点在右上角，用负偏移）——
+            MakeSmallButton("立即结束", new Vector2(-220, -50), font, () => GameManager.Instance?.DebugEndDay());
+            MakeSmallButton("+100金币", new Vector2(-220, -110), font, () => GameManager.Instance?.DebugAddCoins());
         }
 
         private void MakeButton(string label, Vector2 centerPos, Font font, UnityEngine.Events.UnityAction onClick)

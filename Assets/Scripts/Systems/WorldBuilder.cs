@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace CatCafe
 {
@@ -44,6 +45,9 @@ namespace CatCafe
             new Vector3( 3.8f, 2.5f, 0f), new Vector3( 5.2f, 2.5f, 0f),
         };
 
+        // 道具3加桌对象缓存（供 GameManager 显隐，避免 Find 找不到 inactive 对象）
+        public static readonly List<GameObject> ExtraTableObjects = new List<GameObject>();
+
         private void Start()
         {
             SetupCamera();
@@ -51,6 +55,23 @@ namespace CatCafe
             BuildWalls();
             BuildFurniture();
             BuildPlayer();
+            // 初始按存档进度显隐加桌
+            ApplyExtraTablesInitial();
+        }
+
+        /// <summary>初始按进度显隐道具3的加桌。</summary>
+        private void ApplyExtraTablesInitial()
+        {
+            bool has = GameManager.Instance != null
+                    && GameManager.Instance.Progress.HasItem(ItemType.ExtraTables);
+            SetExtraTablesVisible(has);
+        }
+
+        /// <summary>显隐道具3的加桌（供 GameManager 调用）。</summary>
+        public static void SetExtraTablesVisible(bool visible)
+        {
+            foreach (var go in ExtraTableObjects)
+                if (go != null) go.SetActive(visible);
         }
 
         private void SetupCamera()
@@ -105,9 +126,8 @@ namespace CatCafe
             MakeFurniture("Table_B", new Vector3(0f, 3.6f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
             MakeFurniture("Table_C", new Vector3(4.5f, 3.6f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
 
-            // —— 道具3：加两桌四椅（拥有 ExtraTables 才生成）——
-            if (GameManager.Instance != null && GameManager.Instance.Progress.HasItem(ItemType.ExtraTables))
-                BuildExtraTables();
+            // —— 道具3：加两桌四椅（始终创建，默认隐藏，由 GameManager 按道具显隐）——
+            BuildExtraTables();
 
             // —— 三个猫垫（无碰撞）+ 猫实体 ——
             BuildCatPadsAndCat();
@@ -120,14 +140,15 @@ namespace CatCafe
         /// <summary>道具3：在现有三桌下面加两桌四椅。</summary>
         private void BuildExtraTables()
         {
+            ExtraTableObjects.Clear();
             // 两桌在 y=1.0 一排（现有桌子的下方）
-            MakeFurniture("Table_D", new Vector3(-2f, 1.0f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
-            MakeFurniture("Table_E", new Vector3(2f, 1.0f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
+            ExtraTableObjects.Add(MakeFurniture("Table_D", new Vector3(-2f, 1.0f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table"));
+            ExtraTableObjects.Add(MakeFurniture("Table_E", new Vector3(2f, 1.0f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table"));
             // 每桌两椅
-            NewArtObject("Seat_D1", "chair", new Vector3(-2.4f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
-            NewArtObject("Seat_D2", "chair", new Vector3(-1.6f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
-            NewArtObject("Seat_E1", "chair", new Vector3(1.6f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
-            NewArtObject("Seat_E2", "chair", new Vector3(2.4f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
+            ExtraTableObjects.Add(NewArtObject("Seat_D1", "chair", new Vector3(-2.4f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1));
+            ExtraTableObjects.Add(NewArtObject("Seat_D2", "chair", new Vector3(-1.6f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1));
+            ExtraTableObjects.Add(NewArtObject("Seat_E1", "chair", new Vector3(1.6f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1));
+            ExtraTableObjects.Add(NewArtObject("Seat_E2", "chair", new Vector3(2.4f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1));
         }
 
         private void BuildCatPadsAndCat()
