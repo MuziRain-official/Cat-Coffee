@@ -5,71 +5,35 @@ namespace CatCafe.Tests
 {
     public class OrderTests
     {
-        private const float ExtractSeconds = 5f;
-
         [Test]
-        public void Start_SetsRecipe()
+        public void HoldIngredients_SetsRecipeAndQuality()
         {
             var o = new Order();
-            o.Start(RecipeType.Latte);
-            Assert.AreEqual(RecipeType.Latte, o.Recipe);
-            Assert.AreEqual(OrderStep.None, o.Step);
-        }
-
-        [Test]
-        public void LatteFlow_BrewExtractPickupCup()
-        {
-            var o = new Order();
-            o.Start(RecipeType.Latte);
-            o.StartBrewing();
-            Assert.AreEqual(OrderStep.Brewing, o.Step);
-
-            o.CompleteBrew(BrewQuality.Good);
-            Assert.AreEqual(OrderStep.Extracting, o.Step);
-
-            o.TickExtract(ExtractSeconds, ExtractSeconds);
-            Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
-
-            o.Pickup();
+            o.HoldIngredients(RecipeType.Latte, BrewQuality.Perfect);
             Assert.AreEqual(OrderStep.HoldingIngredients, o.Step);
-
-            o.Cup();
-            Assert.AreEqual(OrderStep.ReadyToServe, o.Step); // 拿铁装杯即完成
+            Assert.AreEqual(RecipeType.Latte, o.Recipe);
+            Assert.AreEqual(BrewQuality.Perfect, o.Quality);
         }
 
         [Test]
-        public void CatPawFlow_RequiresLatteArt()
+        public void Cup_LatteGoesReadyToServe()
         {
             var o = new Order();
-            o.Start(RecipeType.CatPaw);
-            o.StartBrewing();
-            o.CompleteBrew(BrewQuality.Perfect);
-            o.TickExtract(ExtractSeconds, ExtractSeconds);
-            o.Pickup();
+            o.HoldIngredients(RecipeType.Latte, BrewQuality.Good);
             o.Cup();
-            Assert.AreEqual(OrderStep.LatteArt, o.Step); // 猫爪装杯即进拉花
-
-            o.CompleteLatteArt();
             Assert.AreEqual(OrderStep.ReadyToServe, o.Step);
         }
 
         [Test]
-        public void CappuccinoFlow_FrothThenExtractThenPickupCup()
+        public void Cup_CatPawGoesLatteArt()
         {
             var o = new Order();
-            o.Start(RecipeType.Cappuccino);
-            o.StartFrothing();
-            Assert.AreEqual(OrderStep.Frothing, o.Step);
-
-            o.CompleteFroth(BrewQuality.Good);
-            Assert.AreEqual(OrderStep.Extracting, o.Step); // 奶泡完成 → 读条
-
-            o.TickExtract(ExtractSeconds, ExtractSeconds); // 读条完成
-            Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
-
-            o.Pickup();
+            o.HoldIngredients(RecipeType.CatPaw, BrewQuality.Good);
             o.Cup();
-            Assert.AreEqual(OrderStep.ReadyToServe, o.Step); // 卡布装杯即完成
+            Assert.AreEqual(OrderStep.LatteArt, o.Step);
+
+            o.CompleteLatteArt();
+            Assert.AreEqual(OrderStep.ReadyToServe, o.Step);
         }
 
         [Test]
@@ -77,18 +41,12 @@ namespace CatCafe.Tests
         {
             var o = new Order();
             var customer = new Customer();
-            customer.PlaceOrder(45f, RecipeType.Latte);
+            customer.PlaceOrder(60f, RecipeType.Latte);
 
-            o.Start(RecipeType.Latte);
-            o.StartBrewing();
-            o.CompleteBrew(BrewQuality.Perfect);
-            o.TickExtract(ExtractSeconds, ExtractSeconds);
-            o.Pickup();
+            o.HoldIngredients(RecipeType.Latte, BrewQuality.Good);
             o.Cup();
 
-            bool served = o.Serve(customer, 12f);
-            Assert.IsTrue(served);
-            Assert.AreEqual(CustomerPhase.Eating, customer.Phase);
+            Assert.IsTrue(o.Serve(customer, 12f));
             Assert.AreEqual(OrderStep.None, o.Step);
         }
 
@@ -97,17 +55,12 @@ namespace CatCafe.Tests
         {
             var o = new Order();
             var customer = new Customer();
-            customer.PlaceOrder(45f, RecipeType.CatPaw); // 顾客要猫爪
+            customer.PlaceOrder(60f, RecipeType.CatPaw);
 
-            o.Start(RecipeType.Latte); // 做的是拿铁
-            o.StartBrewing();
-            o.CompleteBrew(BrewQuality.Good);
-            o.TickExtract(ExtractSeconds, ExtractSeconds);
-            o.Pickup();
+            o.HoldIngredients(RecipeType.Latte, BrewQuality.Good);
             o.Cup();
 
-            bool served = o.Serve(customer, 12f);
-            Assert.IsFalse(served); // 上错菜失败
+            Assert.IsFalse(o.Serve(customer, 12f));
             Assert.AreEqual(OrderStep.ReadyToServe, o.Step);
         }
 

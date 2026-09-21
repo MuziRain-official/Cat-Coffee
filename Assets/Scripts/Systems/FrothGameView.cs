@@ -60,13 +60,12 @@ namespace CatCafe
             for (int i = 0; i < FrothGame.NoteCount; i++)
                 _notes[i].SetActive(false);
 
-            // 奶泡读条进度条：卡布奇诺读条时显示
-            bool extracting = flow.Order.Step == OrderStep.Extracting
-                           && flow.Order.Recipe == RecipeType.Cappuccino;
+            // 奶泡读条进度条：奶泡机读条时显示
+            bool extracting = flow.FrotherStep == DeviceStep.Extracting;
             if (_extractBar != null)
             {
                 _extractBar.SetVisible(extracting);
-                if (extracting) _extractBar.SetProgress(flow.Order.ExtractProgress);
+                if (extracting) _extractBar.SetProgress(flow.FrotherProgress);
             }
 
             if (!active) return;

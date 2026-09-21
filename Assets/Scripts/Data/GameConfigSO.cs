@@ -11,7 +11,7 @@ namespace CatCafe
     {
         [Header("时间系统")]
         [Tooltip("营业日时长（秒）")]
-        public float dayDurationSeconds = 360f;
+        public float dayDurationSeconds = 300f;
         [Tooltip("快进倍率")]
         public float fastForwardMultiplier = 2f;
 
@@ -23,7 +23,7 @@ namespace CatCafe
         [Tooltip("同时在场上限（座位数）")]
         public int maxCustomers = 6;
         [Tooltip("耐心值（秒），点单后未上菜则流失")]
-        public float customerPatienceSeconds = 45f;
+        public float customerPatienceSeconds = 60f;
         [Tooltip("用餐时长（秒），上菜后付费离开")]
         public float customerEatingSeconds = 12f;
 

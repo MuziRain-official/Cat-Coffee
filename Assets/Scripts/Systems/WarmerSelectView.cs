@@ -16,11 +16,16 @@ namespace CatCafe
 
         private void Start()
         {
-            // 面板挂在场景根，世界坐标直接控制尺寸
-            _panel = new GameObject("WarmerSelectPanel", typeof(SpriteRenderer));
+            // 面板容器：scale=1，挂场景根，世界位置
+            _panel = new GameObject("WarmerSelectPanel");
             _panel.transform.position = transform.position + new Vector3(0f, 2.2f, 0f);
-            _panel.transform.localScale = new Vector3(2.6f, 1.3f, 1f); // 世界尺寸
-            var bg = _panel.GetComponent<SpriteRenderer>();
+            _panel.transform.localScale = Vector3.one; // 关键：不缩放容器
+
+            // 背景框（子 sprite 单独缩放成 2.6 x 1.4）
+            var bgGo = new GameObject("BG", typeof(SpriteRenderer));
+            bgGo.transform.SetParent(_panel.transform, false);
+            bgGo.transform.localScale = new Vector3(2.6f, 1.4f, 1f);
+            var bg = bgGo.GetComponent<SpriteRenderer>();
             bg.sprite = SpriteUtil.White;
             bg.color = new Color(0.15f, 0.12f, 0.1f, 0.95f);
             bg.sortingOrder = 20;
@@ -42,17 +47,17 @@ namespace CatCafe
                 var icon = new GameObject("Icon", typeof(SpriteRenderer));
                 icon.transform.SetParent(slot.transform, false);
                 icon.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
-                icon.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+                icon.transform.localPosition = new Vector3(0f, 0.12f, 0f);
                 _slotIcons[i] = icon.GetComponent<SpriteRenderer>();
                 _slotIcons[i].sortingOrder = 22;
 
-                // 头顶菜品名字（世界坐标字号）
+                // 头顶菜品名字（世界字符大小 0.05）
                 var nameGo = new GameObject("Name", typeof(TextMesh));
                 nameGo.transform.SetParent(slot.transform, false);
-                nameGo.transform.localPosition = new Vector3(0f, 0.62f, 0f);
+                nameGo.transform.localPosition = new Vector3(0f, 0.55f, 0f);
                 var tm = nameGo.GetComponent<TextMesh>();
                 tm.fontSize = 40;
-                tm.characterSize = 0.06f; // 世界字符大小
+                tm.characterSize = 0.05f;
                 tm.anchor = TextAnchor.MiddleCenter;
                 tm.alignment = TextAlignment.Center;
                 tm.color = Color.white;

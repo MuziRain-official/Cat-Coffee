@@ -3,9 +3,8 @@ using UnityEngine;
 namespace CatCafe
 {
     /// <summary>
-    /// 商店面板（表现层，世界坐标，挂场景根避免嵌套缩放）。
-    /// 打开时显示道具图标 + 名字 + 价格 + 描述。
-    /// A/D 切换，F 购买，E 关闭。
+    /// 商店面板（表现层，世界坐标，面板 scale=1 避免文字继承缩放）。
+    /// 背景框用子 sprite 单独缩放。
     /// </summary>
     public class ShopView : MonoBehaviour
     {
@@ -17,25 +16,29 @@ namespace CatCafe
 
         private void Start()
         {
-            _panel = new GameObject("ShopPanel", typeof(SpriteRenderer));
+            // 面板容器：scale=1，挂场景根，世界位置
+            _panel = new GameObject("ShopPanel");
             _panel.transform.position = transform.position + new Vector3(0f, 2.6f, 0f);
-            _panel.transform.localScale = new Vector3(2.8f, 3.2f, 1f); // 世界尺寸
-            var bg = _panel.GetComponent<SpriteRenderer>();
+            _panel.transform.localScale = Vector3.one; // 关键：不缩放容器
+
+            // 背景框（子 sprite，单独缩放成 2.8 x 3.4）
+            var bgGo = new GameObject("BG", typeof(SpriteRenderer));
+            bgGo.transform.SetParent(_panel.transform, false);
+            bgGo.transform.localScale = new Vector3(2.8f, 3.4f, 1f);
+            var bg = bgGo.GetComponent<SpriteRenderer>();
             bg.sprite = SpriteUtil.White;
             bg.color = new Color(0.15f, 0.12f, 0.1f, 0.95f);
             bg.sortingOrder = 30;
 
-            // 名字（顶部，世界字符大小 0.07）
-            _nameText = CreateText("Name", _panel.transform, new Vector3(0f, 1.2f, 0f), 48, 0.07f, Color.white, 31);
-            // 价格
-            _priceText = CreateText("Price", _panel.transform, new Vector3(0f, -0.4f, 0f), 40, 0.06f, new Color(1f, 0.85f, 0.4f), 31);
-            // 描述（底部，多行）
-            _descText = CreateText("Desc", _panel.transform, new Vector3(0f, -0.9f, 0f), 36, 0.055f, new Color(0.9f, 0.9f, 0.9f), 31);
+            // 文字：characterSize 是世界单位，不受容器缩放影响
+            _nameText = CreateText("Name", _panel.transform, new Vector3(0f, 1.25f, 0f), 48, 0.06f, Color.white, 31);
+            _priceText = CreateText("Price", _panel.transform, new Vector3(0f, -0.55f, 0f), 40, 0.05f, new Color(1f, 0.85f, 0.4f), 31);
+            _descText = CreateText("Desc", _panel.transform, new Vector3(0f, -1.0f, 0f), 32, 0.04f, new Color(0.9f, 0.9f, 0.9f), 31);
 
-            // 道具图标（名字下方居中，世界 0.8）
+            // 道具图标（世界 0.9，独立缩放）
             var iconGo = new GameObject("ItemIcon", typeof(SpriteRenderer));
             iconGo.transform.SetParent(_panel.transform, false);
-            iconGo.transform.localScale = new Vector3(0.8f, 0.8f, 1f);
+            iconGo.transform.localScale = new Vector3(0.9f, 0.9f, 1f);
             iconGo.transform.localPosition = new Vector3(0f, 0.35f, 0f);
             _iconSR = iconGo.GetComponent<SpriteRenderer>();
             _iconSR.sortingOrder = 31;
@@ -73,7 +76,7 @@ namespace CatCafe
             _iconSR.sprite = PixelArtGenerator.ItemIcon(item);
             int price = ItemDef.Price(item);
             _priceText.text = flow.Progress.HasItem(item) ? "已拥有" : $"价格 {price} 金币";
-            _descText.text = WrapText(ItemDef.Desc(item), 12) + "\n(A/D 切换  F 购买  E 关闭)";
+            _descText.text = WrapText(ItemDef.Desc(item), 10) + "\n(A/D 切换  F 购买  E 关闭)";
         }
 
         private static string WrapText(string text, int charsPerLine)

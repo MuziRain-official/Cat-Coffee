@@ -21,12 +21,11 @@ namespace CatCafe
             var flow = GameManager.Instance?.Flow;
             if (flow == null || _bar == null) return;
 
-            // 只在萃取类菜品（拿铁/猫爪）读条时显示
-            bool show = flow.Order.Step == OrderStep.Extracting
-                     && flow.Order.Recipe != RecipeType.Cappuccino;
+            // 咖啡机读条时显示进度条
+            bool show = flow.CoffeeStep == DeviceStep.Extracting;
             _bar.SetVisible(show);
             if (show)
-                _bar.SetProgress(flow.Order.ExtractProgress);
+                _bar.SetProgress(flow.CoffeeProgress);
         }
     }
 }

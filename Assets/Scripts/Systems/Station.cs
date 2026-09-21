@@ -31,29 +31,27 @@ namespace CatCafe
             }
         }
 
-        /// <summary>咖啡机：空闲→打开选菜品；萃取好→取原料；小游戏中→停指针。</summary>
+        /// <summary>咖啡机：空闲→打开选菜品；读条好→取原料；小游戏中→停指针。</summary>
         private void CoffeeMachineInteract()
         {
             if (Flow == null) return;
             if (Flow.IsBrewGameActive)
                 Flow.StopBrewGame();                     // 小游戏进行中 → 停指针
-            else if (Flow.Order.Step == OrderStep.ReadyToPickup
-                     && (Flow.Order.Recipe == RecipeType.Latte || Flow.Order.Recipe == RecipeType.CatPaw))
-                Flow.Pickup();                           // 萃取好了且是咖啡机菜品 → 取原料
-            else if (Flow.Order.Step == OrderStep.None)
-                Flow.OpenCoffeeSelect();                 // 空闲 → 打开选菜品（拿铁/猫爪）
+            else if (Flow.CoffeeStep == DeviceStep.Ready)
+                Flow.PickupCoffee();                     // 读条好 → 取原料
+            else if (Flow.CoffeeStep == DeviceStep.Idle)
+                Flow.OpenCoffeeSelect();                 // 空闲 → 打开选菜品
         }
 
-        /// <summary>奶泡机：空闲→做卡布；音游中→按E判定；ReadyToPickup且是卡布→取原料。</summary>
+        /// <summary>奶泡机：空闲→做卡布；音游中→按E判定；读条好→取原料。</summary>
         private void FrotherInteract()
         {
             if (Flow == null) return;
             if (Flow.IsFrothGameActive)
                 Flow.TapFroth();                         // 音游中 → 按E判定
-            else if (Flow.Order.Step == OrderStep.ReadyToPickup
-                     && Flow.Order.Recipe == RecipeType.Cappuccino)
-                Flow.Pickup();                           // 奶泡好且是卡布 → 取原料
-            else if (Flow.Order.Step == OrderStep.None)
+            else if (Flow.FrotherStep == DeviceStep.Ready)
+                Flow.PickupFroth();                      // 读条好 → 取原料
+            else if (Flow.FrotherStep == DeviceStep.Idle)
                 Flow.Froth();                            // 空闲 → 做卡布
         }
 
