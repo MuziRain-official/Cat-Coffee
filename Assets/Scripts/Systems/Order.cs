@@ -49,13 +49,16 @@ namespace CatCafe
             Step = OrderStep.ReadyToServe;
         }
 
-        /// <summary>上菜给顾客。成功返回 true 并复位订单，同时把品质写进顾客。</summary>
-        public bool Serve(Customer customer, float eatingSeconds)
+        /// <summary>复位订单到空闲（用于成品入保温台后清空手中状态）。</summary>
+        public void ResetToNone() => Step = OrderStep.None;
+
+        /// <summary>上菜给顾客。成功返回 true 并复位订单，同时把品质与新鲜度写进顾客。</summary>
+        public bool Serve(Customer customer, float eatingSeconds, float freshness = 1f)
         {
             if (Step != OrderStep.ReadyToServe) return false;
             if (customer == null || customer.Phase != CustomerPhase.Waiting) return false;
 
-            customer.Serve(eatingSeconds, Quality);
+            customer.Serve(eatingSeconds, Quality, freshness);
             Step = OrderStep.None;
             return true;
         }

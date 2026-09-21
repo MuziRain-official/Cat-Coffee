@@ -27,6 +27,9 @@ namespace CatCafe
         /// <summary>本单咖啡品质（上菜时锁定，付费时用于计价）。</summary>
         public BrewQuality ServedQuality { get; private set; } = BrewQuality.Good;
 
+        /// <summary>本单咖啡新鲜度（0–1，保温台备餐时可能低于 1）。</summary>
+        public float ServedFreshness { get; private set; } = 1f;
+
         /// <summary>是否已付费（成功完成一单）。</summary>
         public bool HasPaid => Phase == CustomerPhase.Paid;
 
@@ -40,13 +43,14 @@ namespace CatCafe
             RemainingPatience = patienceSeconds;
         }
 
-        /// <summary>上菜，进入用餐并锁定品质。仅在等待中有效。</summary>
-        public void Serve(float eatingSeconds, BrewQuality quality)
+        /// <summary>上菜，进入用餐并锁定品质与新鲜度。仅在等待中有效。</summary>
+        public void Serve(float eatingSeconds, BrewQuality quality, float freshness = 1f)
         {
             if (Phase != CustomerPhase.Waiting) return;
             Phase = CustomerPhase.Eating;
             RemainingEating = eatingSeconds;
             ServedQuality = quality;
+            ServedFreshness = freshness;
         }
 
         /// <summary>推进状态机。patienceSlow 为耐心下降减速比例（0=不减速，0.25=慢25%）。</summary>

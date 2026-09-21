@@ -58,11 +58,11 @@ namespace CatCafe
 
             _orderText.text = flow.Order.Step switch
             {
-                OrderStep.None => "订单：空闲",
+                OrderStep.None => $"订单：空闲  保温台[{flow.Warmer.Count}/{cfg.warmerCapacity}]",
                 OrderStep.Brewing => $"订单：萃取中（时机条，再按E停）",
                 OrderStep.ReadyToPickup => $"订单：萃取好[{QualityLabel(flow.Order.Quality)}]，回咖啡机取原料",
                 OrderStep.HoldingIngredients => "订单：持原料，到装杯台装杯",
-                OrderStep.ReadyToServe => "订单：持成品，上菜给顾客",
+                OrderStep.ReadyToServe => $"订单：持成品，上菜 或 保温台备餐[{flow.Warmer.Count}/{cfg.warmerCapacity}]",
                 _ => ""
             };
 
@@ -127,7 +127,7 @@ namespace CatCafe
             _orderText = NewText("OrderText", bottomPanel, font, 26, new Vector2(20, -20), new Vector2(500, 36));
             _hintText  = NewText("HintText",  bottomPanel, font, 20, new Vector2(20, -80), new Vector2(860, 44));
             _hintText.color = new Color(1f, 0.9f, 0.5f);
-            _hintText.text = "WASD移动 · 咖啡机E萃取 · 猫前:E喂食 Q铲屎 R互动 F抱猫 · 空格暂停";
+            _hintText.text = "WASD移动 · 咖啡机E萃取 · 装杯台E装杯 · 保温台E备餐/取餐 · 猫前E/Q/R/F · 空格暂停";
 
             BuildBrewGameUI(canvasGo.transform, font);
         }

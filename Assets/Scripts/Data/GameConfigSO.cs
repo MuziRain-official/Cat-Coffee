@@ -79,5 +79,11 @@ namespace CatCafe
         [Tooltip("声望转化率（利润 × 比例）")]
         [Range(0f, 1f)]
         public float reputationRate = 0.1f;
+
+        [Header("备餐系统")]
+        [Tooltip("保温台容量（杯）")]
+        public int warmerCapacity = 3;
+        [Tooltip("新鲜度时长（秒），100→0 匀速下降")]
+        public float freshDurationSeconds = 90f;
     }
 }

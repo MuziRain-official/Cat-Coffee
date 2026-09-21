@@ -87,8 +87,7 @@ namespace CatCafe
             // —— 吧台三件套抱团（做咖啡少跑路）——
             MakeStation("CoffeeMachine", CoffeeMachinePos, new Vector2(1.6f, 1.6f), new Color(0.4f, 0.3f, 0.25f), StationType.CoffeeMachine);
             MakeStation("Counter", CounterPos, new Vector2(1.6f, 1.6f), new Color(0.5f, 0.45f, 0.35f), StationType.Counter);
-            // 保温台：P3-4 挂交互，现在先放占位家具（带碰撞）
-            MakeFurniture("Warmer", WarmerPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.4f));
+            MakeStation("Warmer", WarmerPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.4f), StationType.Warmer);
 
             // —— 3 张桌子（上方，围绕吧台）——
             MakeFurniture("Table_A", new Vector3(-4.5f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));

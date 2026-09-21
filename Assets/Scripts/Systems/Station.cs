@@ -24,8 +24,19 @@ namespace CatCafe
             {
                 case StationType.CoffeeMachine: CoffeeMachineInteract(); break;
                 case StationType.Counter: Flow?.Cup(); break;
+                case StationType.Warmer: WarmerInteract(); break;
                 case StationType.CatNest: Flow?.FeedCat(); break;
             }
+        }
+
+        /// <summary>保温台智能分发：手里有成品→放入；手里没东西→取一杯上菜。</summary>
+        private void WarmerInteract()
+        {
+            if (Flow == null) return;
+            if (Flow.Order.Step == OrderStep.ReadyToServe)
+                Flow.StoreToWarmer();  // 手里有成品 → 备餐放入
+            else
+                Flow.TakeFromWarmer(); // 手里没东西 → 取一杯上菜
         }
 
         /// <summary>咖啡机智能分发：小游戏中按E=停指针，萃取好按E=取原料，否则=开始萃取。</summary>

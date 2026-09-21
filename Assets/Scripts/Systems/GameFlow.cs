@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace CatCafe
 {
@@ -17,6 +18,7 @@ namespace CatCafe
         private readonly List<Customer> _customers = new List<Customer>();
         private readonly Order _order = new Order();
         private readonly BrewGame _brewGame = new BrewGame();
+        private readonly Warmer _warmer;
         private readonly System.Random _rng;
 
         private float _spawnTimer;
@@ -27,6 +29,7 @@ namespace CatCafe
             _clock = new DayClock();
             _cat = new CatState();
             _ledger = new DayLedger();
+            _warmer = new Warmer(config.warmerCapacity);
             _rng = new System.Random(seed);
             _spawnTimer = NextSpawnInterval();
         }
@@ -38,6 +41,7 @@ namespace CatCafe
         public IReadOnlyList<Customer> Customers => _customers;
         public Order Order => _order;
         public BrewGame BrewGame => _brewGame;
+        public Warmer Warmer => _warmer;
         public bool IsBrewGameActive => _brewGame.IsActive;
         public bool IsDayOver => _clock.IsDayOver(_config.dayDurationSeconds);
         public int ServedCount { get; private set; }
@@ -99,12 +103,45 @@ namespace CatCafe
             return true;
         }
 
-        /// <summary>上菜给指定顾客。</summary>
+        /// <summary>上菜给指定顾客（新鲜度默认 1=现做）。</summary>
         public bool ServeTo(Customer customer)
         {
             if (!_order.Serve(customer, _config.customerEatingSeconds)) return false;
             ServedCount++;
             return true;
+        }
+
+        /// <summary>把手里成品放入保温台（备餐）。仅在持成品(ReadyToServe)时有效。</summary>
+        public bool StoreToWarmer()
+        {
+            if (_order.Step != OrderStep.ReadyToServe) return false;
+            if (_warmer.IsFull) return false;
+            _warmer.Store(_order.Quality);
+            _order.ResetToNone(); // 订单完成（咖啡入保温台）
+            return true;
+        }
+
+        /// <summary>从保温台取一杯成品，端去上菜（FIFO）。</summary>
+        public bool TakeFromWarmer()
+        {
+            var cup = _warmer.Take();
+            if (cup == null) return false;
+            var customer = EarliestWaiting();
+            if (customer == null)
+            {
+                _warmer.ReturnCup(cup); // 没顾客，放回（保留新鲜度）
+                return false;
+            }
+            customer.Serve(_config.customerEatingSeconds, cup.Quality, cup.Freshness);
+            ServedCount++;
+            return true;
+        }
+
+        private Customer EarliestWaiting()
+        {
+            foreach (var c in _customers)
+                if (c.Phase == CustomerPhase.Waiting) return c;
+            return null;
         }
 
         /// <summary>给当前待上菜订单选一个最早等待的顾客。</summary>
@@ -148,6 +185,7 @@ namespace CatCafe
             _clock.Tick(deltaTime);
             _cat.Tick(deltaTime, _config);
             _brewGame.Tick(deltaTime, _config.swingSpeed); // 推进萃取时机条摆动
+            _warmer.Tick(deltaTime, _config.freshDurationSeconds); // 保温台新鲜度下降
 
             int paidThisFrame = 0;
             SpawnIfDue(deltaTime);
@@ -163,7 +201,7 @@ namespace CatCafe
                 c.Tick(deltaTime, patienceSlow);
                 if (c.Phase == CustomerPhase.Paid)
                 {
-                    int price = PriceFor(c.ServedQuality);
+                    int price = PriceFor(c.ServedQuality, c.ServedFreshness);
                     _ledger.RecordRevenue(price);
                     paidThisFrame++;
                 }
@@ -177,8 +215,8 @@ namespace CatCafe
             return paidThisFrame;
         }
 
-        /// <summary>售价 = 基础价 × 品质倍率 × 心情系数（向下取整到 0 以上）。</summary>
-        private int PriceFor(BrewQuality quality)
+        /// <summary>售价 = 基础价 × 品质倍率 × 心情系数 × 新鲜度（向下取整到 0 以上）。</summary>
+        private int PriceFor(BrewQuality quality, float freshness = 1f)
         {
             float qMult = quality switch
             {
@@ -186,7 +224,8 @@ namespace CatCafe
                 BrewQuality.Poor => _config.poorPriceMult,
                 _ => _config.goodPriceMult,
             };
-            return Math.Max(0, (int)Math.Round(_config.coffeePrice * qMult * MoodMultiplier));
+            float fresh = Mathf.Clamp01(freshness);
+            return Math.Max(0, (int)Math.Round(_config.coffeePrice * qMult * MoodMultiplier * fresh));
         }
 
         private void SpawnIfDue(float deltaTime)

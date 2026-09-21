@@ -7,6 +7,7 @@ namespace CatCafe
     {
         CoffeeMachine, // 萃取（第 1 步）
         Counter,       // 装杯（第 2 步）
+        Warmer,        // 保温台（备餐/取餐）
         CatNest        // 猫咪（E喂食/Q铲屎/R互动）
     }
 
