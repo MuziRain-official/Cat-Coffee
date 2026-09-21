@@ -60,6 +60,7 @@ namespace CatCafe
             {
                 OrderStep.None => $"订单：空闲  保温台[{flow.Warmer.Count}/{cfg.warmerCapacity}]",
                 OrderStep.Brewing => $"订单：萃取中（时机条，再按E停）",
+                OrderStep.Extracting => $"订单：咖啡机萃取中 {Mathf.CeilToInt(flow.Order.ExtractProgress * 100)}%",
                 OrderStep.ReadyToPickup => $"订单：萃取好[{QualityLabel(flow.Order.Quality)}]，回咖啡机取原料",
                 OrderStep.HoldingIngredients => "订单：持原料，到装杯台装杯",
                 OrderStep.ReadyToServe => $"订单：持成品，上菜 或 保温台备餐[{flow.Warmer.Count}/{cfg.warmerCapacity}]",

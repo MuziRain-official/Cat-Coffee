@@ -25,6 +25,9 @@ namespace CatCafe
         /// <summary>当前杯数。</summary>
         public int Count => _cups.Count;
 
+        /// <summary>只读杯列表（表现层读新鲜度用）。</summary>
+        public IReadOnlyList<WarmCup> Cups => _cups;
+
         /// <summary>是否已满。</summary>
         public bool IsFull => _cups.Count >= _capacity;
 

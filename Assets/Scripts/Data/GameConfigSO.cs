@@ -40,6 +40,8 @@ namespace CatCafe
         public float goodPriceMult = 1.0f;
         [Tooltip("勉强品质售价倍率")]
         public float poorPriceMult = 0.7f;
+        [Tooltip("萃取读条时长（秒），小游戏完成后咖啡机实际萃取")]
+        public float extractSeconds = 5f;
 
         [Header("猫咪系统")]
         public float catStatMin = 0f;

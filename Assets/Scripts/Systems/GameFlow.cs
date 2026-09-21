@@ -182,6 +182,7 @@ namespace CatCafe
             _clock.Tick(deltaTime);
             _cat.Tick(deltaTime, _config);
             _brewGame.Tick(deltaTime, _config.swingSpeed); // 推进萃取时机条摆动
+            _order.TickExtract(deltaTime, _config.extractSeconds); // 推进咖啡机萃取读条
             _warmer.Tick(deltaTime, _config.freshDurationSeconds); // 保温台新鲜度下降
 
             int paidThisFrame = 0;

@@ -85,9 +85,11 @@ namespace CatCafe
         private void BuildFurniture()
         {
             // —— 吧台三件套抱团（做咖啡少跑路）——
-            MakeStation("CoffeeMachine", CoffeeMachinePos, new Vector2(1.6f, 1.6f), new Color(0.4f, 0.3f, 0.25f), StationType.CoffeeMachine);
+            var coffee = MakeStation("CoffeeMachine", CoffeeMachinePos, new Vector2(1.6f, 1.6f), new Color(0.4f, 0.3f, 0.25f), StationType.CoffeeMachine);
+            coffee.AddComponent<CoffeeMachineView>(); // 萃取读条
             MakeStation("Counter", CounterPos, new Vector2(1.6f, 1.6f), new Color(0.5f, 0.45f, 0.35f), StationType.Counter);
-            MakeStation("Warmer", WarmerPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.4f), StationType.Warmer);
+            var warmer = MakeStation("Warmer", WarmerPos, new Vector2(1.6f, 1.6f), new Color(0.55f, 0.5f, 0.4f), StationType.Warmer);
+            warmer.AddComponent<WarmerView>(); // 每杯新鲜度条
 
             // —— 3 张桌子（上方，围绕吧台）——
             MakeFurniture("Table_A", new Vector3(-4.5f, 3.6f, 0f), new Vector2(2.2f, 1f), new Color(0.45f, 0.35f, 0.25f));

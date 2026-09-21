@@ -5,6 +5,8 @@ namespace CatCafe.Tests
 {
     public class OrderTests
     {
+        private const float ExtractSeconds = 5f;
+
         [Test]
         public void StartBrewing_SetsBrewingStep()
         {
@@ -22,22 +24,39 @@ namespace CatCafe.Tests
 
             o.StartBrewing();
             o.CompleteBrew(BrewQuality.Perfect);
-            Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
+            Assert.AreEqual(OrderStep.Extracting, o.Step); // 小游戏完 → 萃取读条
             Assert.AreEqual(BrewQuality.Perfect, o.Quality);
         }
 
         [Test]
-        public void Pickup_OnlyWorksAfterBrew()
+        public void TickExtract_MovesToReadyToPickupAfterFullDuration()
         {
             var o = new Order();
-            o.Pickup(); // 未萃取，忽略
-            Assert.AreEqual(OrderStep.None, o.Step);
-
             o.StartBrewing();
-            o.Pickup(); // 萃取未完成，忽略
+            o.CompleteBrew(BrewQuality.Good);
+
+            o.TickExtract(2.5f, ExtractSeconds);
+            Assert.AreEqual(OrderStep.Extracting, o.Step);
+            Assert.AreEqual(0.5f, o.ExtractProgress, 0.01f);
+
+            o.TickExtract(2.5f, ExtractSeconds);
+            Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
+            Assert.AreEqual(1f, o.ExtractProgress);
+        }
+
+        [Test]
+        public void Pickup_OnlyWorksAfterExtractDone()
+        {
+            var o = new Order();
+            o.StartBrewing();
+            o.Pickup(); // 未萃取完，忽略
             Assert.AreEqual(OrderStep.Brewing, o.Step);
 
             o.CompleteBrew(BrewQuality.Good);
+            o.Pickup(); // 萃取读条中，忽略
+            Assert.AreEqual(OrderStep.Extracting, o.Step);
+
+            o.TickExtract(ExtractSeconds, ExtractSeconds);
             o.Pickup();
             Assert.AreEqual(OrderStep.HoldingIngredients, o.Step);
         }
@@ -51,6 +70,7 @@ namespace CatCafe.Tests
 
             o.StartBrewing();
             o.CompleteBrew(BrewQuality.Good);
+            o.TickExtract(ExtractSeconds, ExtractSeconds);
             o.Cup(); // 没取原料，忽略
             Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
 
@@ -68,6 +88,7 @@ namespace CatCafe.Tests
 
             o.StartBrewing();
             o.CompleteBrew(BrewQuality.Perfect);
+            o.TickExtract(ExtractSeconds, ExtractSeconds);
             o.Pickup();
             o.Cup();
 
@@ -98,6 +119,7 @@ namespace CatCafe.Tests
 
             o.StartBrewing();
             o.CompleteBrew(BrewQuality.Good);
+            o.TickExtract(ExtractSeconds, ExtractSeconds);
             o.Pickup();
             o.Cup();
 
@@ -107,7 +129,7 @@ namespace CatCafe.Tests
         }
 
         [Test]
-        public void FullFlow_FollowsFourStepSequence()
+        public void FullFlow_FollowsFiveStepSequence()
         {
             var o = new Order();
             Assert.AreEqual(OrderStep.None, o.Step);
@@ -116,6 +138,9 @@ namespace CatCafe.Tests
             Assert.AreEqual(OrderStep.Brewing, o.Step);
 
             o.CompleteBrew(BrewQuality.Good);
+            Assert.AreEqual(OrderStep.Extracting, o.Step);
+
+            o.TickExtract(ExtractSeconds, ExtractSeconds);
             Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
 
             o.Pickup();

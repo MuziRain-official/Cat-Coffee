@@ -5,14 +5,15 @@ namespace CatCafe
     {
         None,               // 未开始
         Brewing,            // 萃取小游戏进行中（玩家在时机条里）
-        ReadyToPickup,      // 品质锁定，咖啡液在咖啡机，需回咖啡机取
+        Extracting,         // 小游戏完成，咖啡机实际萃取中（读条，可离开）
+        ReadyToPickup,      // 萃取完成，咖啡液在咖啡机，需回咖啡机取
         HoldingIngredients, // 主角持原料，需到装杯台装杯
         ReadyToServe,       // 装杯完成，主角持成品，需上菜
     }
 
     /// <summary>
-    /// 订单（纯逻辑，可单元测试）。固定工序 4 步：
-    /// 萃取小游戏 → 回咖啡机取原料 → 装杯 → 上菜。
+    /// 订单（纯逻辑，可单元测试）。固定工序 5 步：
+    /// 萃取小游戏 → 咖啡机萃取读条 → 回咖啡机取原料 → 装杯 → 上菜。
     /// </summary>
     public class Order
     {
@@ -24,19 +25,41 @@ namespace CatCafe
         /// <summary>本杯咖啡的新鲜度（1=现做；从保温台取会 <1）。</summary>
         public float Freshness { get; private set; } = 1f;
 
+        /// <summary>萃取读条进度 0–1（Extracting 状态用）。</summary>
+        public float ExtractProgress { get; private set; }
+
         /// <summary>开始第 1 步：萃取小游戏。</summary>
         public void StartBrewing()
         {
             Step = OrderStep.Brewing;
             Freshness = 1f; // 现做默认新鲜
+            ExtractProgress = 0f;
         }
 
-        /// <summary>小游戏停指针后，锁定品质并进入 ReadyToPickup。仅在萃取中有效。</summary>
+        /// <summary>小游戏停指针后，锁定品质并进入 Extracting（咖啡机开始实际萃取）。仅在萃取中有效。</summary>
         public void CompleteBrew(BrewQuality quality)
         {
             if (Step != OrderStep.Brewing) return;
             Quality = quality;
-            Step = OrderStep.ReadyToPickup;
+            Step = OrderStep.Extracting;
+        }
+
+        /// <summary>推进萃取读条，完成后进入 ReadyToPickup。仅在 Extracting 有效。</summary>
+        public void TickExtract(float deltaTime, float extractSeconds)
+        {
+            if (Step != OrderStep.Extracting) return;
+            if (extractSeconds <= 0f)
+            {
+                Step = OrderStep.ReadyToPickup;
+                ExtractProgress = 1f;
+                return;
+            }
+            ExtractProgress += deltaTime / extractSeconds;
+            if (ExtractProgress >= 1f - 1e-4f) // 浮点容差
+            {
+                ExtractProgress = 1f;
+                Step = OrderStep.ReadyToPickup;
+            }
         }
 
         /// <summary>回咖啡机取原料。仅在萃取完成后有效。</summary>

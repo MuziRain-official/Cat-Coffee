@@ -53,13 +53,13 @@ namespace CatCafe.Tests
         }
 
         [Test]
-        public void StopBrewGame_LocksQualityAndReadyToPickup()
+        public void StopBrewGame_LocksQualityAndStartsExtracting()
         {
             Assert.IsTrue(_flow.Brew());
             Advance(0.5f); // 让指针动一下
             Assert.IsTrue(_flow.StopBrewGame());
             Assert.IsFalse(_flow.IsBrewGameActive);
-            Assert.AreEqual(OrderStep.ReadyToPickup, _flow.Order.Step);
+            Assert.AreEqual(OrderStep.Extracting, _flow.Order.Step);
         }
 
         [Test]
@@ -69,7 +69,8 @@ namespace CatCafe.Tests
             Assert.GreaterOrEqual(_flow.Customers.Count, 1);
 
             Assert.IsTrue(_flow.Brew());
-            Assert.IsTrue(_flow.StopBrewGame()); // 停指针锁定品质 → ReadyToPickup
+            Assert.IsTrue(_flow.StopBrewGame()); // 停指针锁定品质 → Extracting
+            Advance(_config.extractSeconds);     // 萃取读条完成 → ReadyToPickup
             Assert.IsTrue(_flow.Pickup());  // 取原料
             Assert.IsTrue(_flow.Cup());     // 装杯
             Assert.IsTrue(_flow.ServeToEarliestWaiting()); // 上菜
