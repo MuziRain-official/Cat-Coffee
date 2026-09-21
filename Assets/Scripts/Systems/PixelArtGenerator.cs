@@ -275,6 +275,19 @@ namespace CatCafe
             return c.ToSprite();
         }
 
+        /// <summary>就餐中图标（叉子/用餐）。</summary>
+        public static Sprite EatingIcon()
+        {
+            var c = new PixelCanvas(N);
+            c.FillCircle(8, 8, 7, PixelPalette.White);
+            c.CircleOutline(8, 8, 7, PixelPalette.CreamDark);
+            // 简单"餐盘"：一个盘子 + 食物
+            c.FillCircle(8, 8, 4, PixelPalette.CreamDark);
+            c.FillCircle(8, 8, 2, PixelPalette.Orange);
+            c.FillCircle(8, 8, 1, PixelPalette.CoffeeBrown);
+            return c.ToSprite();
+        }
+
         /// <summary>气泡底（白色圆底）。</summary>
         public static Sprite BubbleBg()
         {

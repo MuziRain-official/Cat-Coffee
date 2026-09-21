@@ -72,13 +72,19 @@ namespace CatCafe
         {
             if (Customer == null) return;
 
-            // 气泡：等待时显示菜品图标，用餐/离开时隐藏
+            // 气泡：等待时显示菜品图标，就餐时显示"就餐中"，离开时隐藏
             if (_bubble != null)
             {
-                bool show = Customer.Phase == CustomerPhase.Waiting;
+                bool show = Customer.Phase == CustomerPhase.Waiting
+                         || Customer.Phase == CustomerPhase.Eating;
                 _bubble.SetActive(show);
                 if (show && _bubbleIcon != null)
-                    _bubbleIcon.sprite = PixelArtGenerator.CupIcon(Customer.OrderedRecipe);
+                {
+                    if (Customer.Phase == CustomerPhase.Eating)
+                        _bubbleIcon.sprite = PixelArtGenerator.EatingIcon();
+                    else
+                        _bubbleIcon.sprite = PixelArtGenerator.CupIcon(Customer.OrderedRecipe);
+                }
             }
 
             // 有贴图时保持原色（耐心可视化后续用进度条补）；无贴图则用颜色表达状态

@@ -3,58 +3,56 @@ using UnityEngine;
 namespace CatCafe
 {
     /// <summary>
-    /// 保温台选择栏（表现层，世界空间）。
+    /// 保温台选择栏（表现层，世界坐标，挂在场景根避免嵌套缩放）。
     /// 长背景框 + 3 个餐位并排，A/D 选取，选中餐位黄色背景高亮，F 确认。
     /// </summary>
     public class WarmerSelectView : MonoBehaviour
     {
         private GameObject _panel;
-        private GameObject[] _slots = new GameObject[3];        // 3 个餐位
+        private GameObject[] _slots = new GameObject[3];
         private SpriteRenderer[] _slotSRs = new SpriteRenderer[3];
-        private SpriteRenderer[] _slotIcons = new SpriteRenderer[3]; // 每餐位菜品图标
-        private TextMesh[] _slotNames = new TextMesh[3];            // 每餐位头顶菜品名字
+        private SpriteRenderer[] _slotIcons = new SpriteRenderer[3];
+        private TextMesh[] _slotNames = new TextMesh[3];
 
         private void Start()
         {
-            // 长背景框（世界尺寸 2.6 x 1.2）
+            // 面板挂在场景根，世界坐标直接控制尺寸
             _panel = new GameObject("WarmerSelectPanel", typeof(SpriteRenderer));
-            _panel.transform.SetParent(transform, false);
-            _panel.transform.localScale = new Vector3(2.6f / 1.6f, 1.2f / 1.6f, 1f);
-            _panel.transform.localPosition = new Vector3(0f, 2.1f / 1.6f, 0f);
+            _panel.transform.position = transform.position + new Vector3(0f, 2.2f, 0f);
+            _panel.transform.localScale = new Vector3(2.6f, 1.3f, 1f); // 世界尺寸
             var bg = _panel.GetComponent<SpriteRenderer>();
             bg.sprite = SpriteUtil.White;
-            bg.color = new Color(0.15f, 0.12f, 0.1f, 0.9f);
+            bg.color = new Color(0.15f, 0.12f, 0.1f, 0.95f);
             bg.sortingOrder = 20;
 
-            // 3 个餐位并排
+            // 3 个餐位并排（世界尺寸 0.7x0.85，间距 0.8）
             for (int i = 0; i < 3; i++)
             {
                 var slot = new GameObject("Slot_" + i, typeof(SpriteRenderer));
                 slot.transform.SetParent(_panel.transform, false);
-                slot.transform.localScale = new Vector3(0.7f, 0.8f, 1f);
-                float x = (i - 1) * 0.75f;
-                slot.transform.localPosition = new Vector3(x, 0f, 0f);
+                slot.transform.localScale = new Vector3(0.7f, 0.85f, 1f);
+                slot.transform.localPosition = new Vector3((i - 1) * 0.8f, 0f, 0f);
                 _slotSRs[i] = slot.GetComponent<SpriteRenderer>();
                 _slotSRs[i].sprite = SpriteUtil.White;
                 _slotSRs[i].color = new Color(0.3f, 0.28f, 0.25f, 0.9f);
                 _slotSRs[i].sortingOrder = 21;
                 _slots[i] = slot;
 
-                // 菜品图标（餐位中央，正常大小 0.45）
+                // 菜品图标（世界 0.5）
                 var icon = new GameObject("Icon", typeof(SpriteRenderer));
                 icon.transform.SetParent(slot.transform, false);
-                icon.transform.localScale = new Vector3(0.45f, 0.45f, 1f);
-                icon.transform.localPosition = new Vector3(0f, 0.05f, 0f);
+                icon.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+                icon.transform.localPosition = new Vector3(0f, 0.1f, 0f);
                 _slotIcons[i] = icon.GetComponent<SpriteRenderer>();
                 _slotIcons[i].sortingOrder = 22;
 
-                // 头顶菜品名字
+                // 头顶菜品名字（世界坐标字号）
                 var nameGo = new GameObject("Name", typeof(TextMesh));
                 nameGo.transform.SetParent(slot.transform, false);
                 nameGo.transform.localPosition = new Vector3(0f, 0.62f, 0f);
                 var tm = nameGo.GetComponent<TextMesh>();
                 tm.fontSize = 40;
-                tm.characterSize = 0.03f;
+                tm.characterSize = 0.06f; // 世界字符大小
                 tm.anchor = TextAnchor.MiddleCenter;
                 tm.alignment = TextAlignment.Center;
                 tm.color = Color.white;
@@ -82,8 +80,7 @@ namespace CatCafe
                 {
                     _slots[i].SetActive(true);
                     _slotIcons[i].sprite = PixelArtGenerator.CupIcon(warmer.Cups[i].Recipe);
-                    _slotNames[i].text = Recipe.Name(warmer.Cups[i].Recipe); // 头顶名字
-                    // 选中餐位黄色背景
+                    _slotNames[i].text = Recipe.Name(warmer.Cups[i].Recipe);
                     _slotSRs[i].color = (i == flow.WarmerCursor)
                         ? new Color(0.95f, 0.85f, 0.3f, 0.95f)  // 黄色高亮
                         : new Color(0.3f, 0.28f, 0.25f, 0.9f);  // 普通

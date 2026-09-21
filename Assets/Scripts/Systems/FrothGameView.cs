@@ -17,6 +17,7 @@ namespace CatCafe
         private GameObject[] _notes = new GameObject[FrothGame.NoteCount];
         private SpriteRenderer[] _noteSRs = new SpriteRenderer[FrothGame.NoteCount];
         private GameObject _judgeLine;
+        private WorldBar _extractBar; // 奶泡读条进度条
 
         private void Start()
         {
@@ -41,6 +42,12 @@ namespace CatCafe
             lineSR.color = new Color(1f, 0.4f, 0.4f, 0.95f);
             lineSR.sortingOrder = 9;
             _judgeLine.SetActive(false);
+
+            // 奶泡读条进度条（挂场景根，世界坐标，在奶泡机上方）
+            var barGo = new GameObject("FrothExtractBar");
+            barGo.transform.position = transform.position + new Vector3(0f, 1.5f, 0f);
+            _extractBar = WorldBar.Create(barGo.transform, Vector3.zero, 1.2f, 0.1f, new Color(0.9f, 0.6f, 0.2f));
+            _extractBar.SetVisible(false);
         }
 
         private void Update()
@@ -52,6 +59,16 @@ namespace CatCafe
             _judgeLine.SetActive(active);
             for (int i = 0; i < FrothGame.NoteCount; i++)
                 _notes[i].SetActive(false);
+
+            // 奶泡读条进度条：卡布奇诺读条时显示
+            bool extracting = flow.Order.Step == OrderStep.Extracting
+                           && flow.Order.Recipe == RecipeType.Cappuccino;
+            if (_extractBar != null)
+            {
+                _extractBar.SetVisible(extracting);
+                if (extracting) _extractBar.SetProgress(flow.Order.ExtractProgress);
+            }
+
             if (!active) return;
 
             // 判定线世界位置（奶泡机上方）
