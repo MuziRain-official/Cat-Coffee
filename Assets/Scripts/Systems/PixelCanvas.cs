@@ -84,7 +84,14 @@ namespace CatCafe
         public Sprite ToSprite()
         {
             var tex = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
-            tex.SetPixels(_px);
+
+            // 垂直翻转：画布 y=0 是顶部，Texture2D y=0 是底部
+            var flipped = new Color[Size * Size];
+            for (int y = 0; y < Size; y++)
+                for (int x = 0; x < Size; x++)
+                    flipped[(Size - 1 - y) * Size + x] = _px[y * Size + x];
+
+            tex.SetPixels(flipped);
             tex.filterMode = FilterMode.Point; // 像素硬边
             tex.wrapMode = TextureWrapMode.Clamp;
             tex.Apply();
