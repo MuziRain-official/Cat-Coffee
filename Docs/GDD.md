@@ -169,10 +169,36 @@
 | 整体紧张度 | 均衡 | 有调度压力不焦虑 |
 | 美术音频 | AI 生成 + 风格锁 | 全 AI 闭环 |
 
-## 8. 美术风格（待 P5 定稿）
+## 8. 美术风格（P5 已定稿）
 
-- 治愈系扁平矢量 / 柔和粉彩，暖色调，圆润造型。
-- 风格锁：generate_image 统一 prompt 前缀。
+### 风格定位
+**东方夜雀食堂式像素风 + 奶油复古色 + 无描边**
+
+- 像素颗粒质感，复古温馨，参考《东方夜雀食堂》《Cafe Master Story》
+- 奶油复古色调：奶油白、暖棕、淡橙、抹茶绿，低饱和、柔和
+- 无描边，色块直接相接，柔和治愈
+- 2D 正俯视，几何感清晰
+
+### 风格锁（P5 生成所有图必须用这个统一 prompt 前缀）
+
+```
+pixel art, top-down view, cozy cat cafe, cream and warm brown retro palette,
+soft low-saturation colors, no outline, clean shapes, warm cozy atmosphere,
+game asset sprite
+```
+
+后续 `generate_image` 时，把具体物体描述接在此前缀之后，例如：
+`...前缀... , a coffee machine on a counter, 48x48 pixel sprite`
+
+### 资产清单（P5 待生成）
+- 主角（猫咖店员）
+- 猫（不同毛色）
+- 咖啡机 / 装杯台 / 保温台
+- 桌子 / 椅子
+- 咖啡杯（成品）
+- 地板 / 墙壁
+- 顾客（多种）
+- 猫窝 / 猫垫
 
 ## 9. 后续方向（P3+ 扩展池）
 
