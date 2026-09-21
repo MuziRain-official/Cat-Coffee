@@ -46,12 +46,12 @@ namespace CatCafe
             sr.color = new Color(0.7f, 0.5f, 0.3f); // 咖啡色杯身
             sr.sortingOrder = 6;
 
-            // 图标排成一排
-            float x = (_cupIcons.Count - 1) * 0.6f;
-            icon.transform.localPosition = new Vector3(x, 1.2f, 0f);
+            // 图标排成一排（世界坐标，父保温台 scale=1.6，需除以补偿）
+            float worldX = (_cupIcons.Count - 1) * 0.6f;
+            icon.transform.localPosition = new Vector3(worldX / 1.6f, 1.2f / 1.6f, 0f);
 
-            // 新鲜度条
-            WorldBar.Create(icon.transform, new Vector3(0f, 0.7f, 0f), 0.5f, 0.08f, new Color(0.3f, 0.9f, 0.4f));
+            // 新鲜度条：宽 0.5 与杯身同宽，在杯子上方 0.5 处
+            WorldBar.Create(icon.transform, new Vector3(0f, 1.0f, 0f), 0.5f, 0.08f, new Color(0.3f, 0.9f, 0.4f));
 
             _cupIcons.Add(icon);
         }
