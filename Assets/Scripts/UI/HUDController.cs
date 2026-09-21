@@ -5,8 +5,8 @@ using UnityEngine.EventSystems;
 namespace CatCafe
 {
     /// <summary>
-    /// 极简 HUD（仅状态显示，无操作按钮——操作改为空间交互）。
-    /// 统一「左上角原点、Y 向下」坐标，面板与子元素同锚点。
+    /// 极简 HUD：只显示剩余时间、赚了多少钱、猫位置。
+    /// 小游戏（萃取时机条/下落音游/拉花）进行中时，显示对应提示面板。
     /// </summary>
     public class HUDController : MonoBehaviour
     {
@@ -15,17 +15,19 @@ namespace CatCafe
         private Text _timeText;
         private Text _coinsText;
         private Text _catText;
-        private Text _customerText;
-        private Text _orderText;
-        private Text _hintText;
 
-        // 萃取时机条（表现层）
+        // 萃取时机条
         private GameObject _brewPanel;
-        private RectTransform _brewBar;      // 时机条底槽
-        private RectTransform _brewPointer;  // 指针
-        private Image _brewPointerImg;
-        private RectTransform _perfectZone;  // 完美区高亮
-        private Text _brewQualityText;
+        private RectTransform _brewBar;
+        private RectTransform _brewPointer;
+
+        // 下落音游提示
+        private GameObject _frothPanel;
+        private Text _frothText;
+
+        // 拉花提示
+        private GameObject _latteArtPanel;
+        private Text _latteArtText;
 
         private void Start()
         {
@@ -43,65 +45,46 @@ namespace CatCafe
         {
             var flow = _gm.Flow;
             var cfg = _gm.Config;
+
+            // 1. 剩余时间
             float remain = flow.Clock.RemainingSeconds(cfg.dayDurationSeconds);
+            _timeText.text = flow.IsDayOver ? "打烊" : $"剩余 {Mathf.CeilToInt(remain)}s";
 
-            _timeText.text = flow.IsDayOver
-                ? "【打烊】"
-                : $"剩余 {Mathf.CeilToInt(remain)}s";
+            // 2. 赚了多少钱（利润 = 收入 - 成本）
+            _coinsText.text = $"赚了 {flow.Ledger.Profit} 金币";
 
-            _coinsText.text = $"金币 {flow.Ledger.Coins}  (收入{flow.Ledger.Revenue} 成本{flow.Ledger.Cost})";
+            // 3. 猫位置
+            _catText.text = $"猫：{ZoneLabel(flow.Cat)}";
 
-            var c = flow.Cat;
-            _catText.text = $"猫  饱腹{c.Satiety:F0} 清洁{c.Hygiene:F0} 心情{c.Mood:F0}  位置[{ZoneLabel(c)}]  [{FlowLabel(flow)}]";
-
-            _customerText.text = $"顾客  在场{flow.Customers.Count}  已服务{flow.ServedCount}  流失{flow.LeftCount}";
-
-            _orderText.text = flow.Order.Step switch
-            {
-                OrderStep.None => $"订单：空闲  保温台[{flow.Warmer.Count}/{cfg.warmerCapacity}]",
-                OrderStep.Brewing => $"做{Recipe.Name(flow.Order.Recipe)}：萃取中（时机条，再按E停）",
-                OrderStep.Extracting => $"做{Recipe.Name(flow.Order.Recipe)}：咖啡机萃取中 {Mathf.CeilToInt(flow.Order.ExtractProgress * 100)}%",
-                OrderStep.Frothing => $"做{Recipe.Name(flow.Order.Recipe)}：打奶泡（连击E，已{flow.FrothGame.Hits}拍）",
-                OrderStep.ReadyToPickup => $"做{Recipe.Name(flow.Order.Recipe)}：原料好[{QualityLabel(flow.Order.Quality)}]，回设备取",
-                OrderStep.HoldingIngredients => $"做{Recipe.Name(flow.Order.Recipe)}：持原料，到装杯台装杯",
-                OrderStep.ReadyToLatteArt => $"做{Recipe.Name(flow.Order.Recipe)}：装好杯，装杯台按E拉花",
-                OrderStep.LatteArt => $"拉花中（3x3中心格，按E停）",
-                OrderStep.ReadyToServe => $"持成品[{Recipe.Name(flow.Order.Recipe)}]，上菜 或 保温台备餐[{flow.Warmer.Count}/{cfg.warmerCapacity}]",
-                _ => ""
-            };
-
-            // 时机条显隐 + 指针位置刷新
+            // 小游戏面板显隐
             bool brewing = flow.IsBrewGameActive;
             if (_brewPanel != null) _brewPanel.SetActive(brewing);
             if (brewing && _brewPointer != null && _brewBar != null)
+                _brewPointer.anchoredPosition = new Vector2(flow.BrewGame.PointerPosition * _brewBar.sizeDelta.x, 0f);
+
+            bool frothing = flow.IsFrothGameActive;
+            if (_frothPanel != null) _frothPanel.SetActive(frothing);
+            if (frothing && _frothText != null)
             {
-                float pos = flow.BrewGame.PointerPosition; // 0–1
-                _brewPointer.anchoredPosition = new Vector2(pos * _brewBar.sizeDelta.x, 0f);
-                _brewQualityText.text = QualityLabel(flow.Order.Quality);
+                int judged = 0;
+                for (int i = 0; i < FrothGame.NoteCount; i++)
+                    if (flow.FrothGame.Judgements[i] != NoteJudgement.Pending) judged++;
+                _frothText.text = $"奶泡下落中！在判定线按 E\n已判定 {judged}/{FrothGame.NoteCount}";
             }
+
+            bool latteArt = flow.IsLatteArtGameActive;
+            if (_latteArtPanel != null) _latteArtPanel.SetActive(latteArt);
+            if (latteArt && _latteArtText != null)
+                _latteArtText.text = $"拉花中！光标格 {flow.LatteArtGame.CursorIndex}，在中心格(4)按 E";
         }
 
-        private string FlowLabel(GameFlow flow)
-        {
-            if (flow.MoodMultiplier > 1f) return "增益";
-            if (flow.MoodMultiplier < 1f) return "惩罚";
-            return "正常";
-        }
-
-        private static string QualityLabel(BrewQuality q) => q switch
-        {
-            BrewQuality.Perfect => "完美",
-            BrewQuality.Poor => "勉强",
-            _ => "良好",
-        };
-
-        private static string ZoneLabel(CatState c) => c.IsCarried
+        private static string ZoneLabel(CatState cat) => cat.IsCarried
             ? "被抱着"
-            : c.Zone switch
+            : cat.Zone switch
             {
-                CatZone.Bar => "吧台(做咖啡更易)",
-                CatZone.Seat => "座位(顾客耐心↑)",
-                CatZone.Door => "门口(客流↑)",
+                CatZone.Bar => "吧台（制作快·保鲜久）",
+                CatZone.Seat => "餐桌旁（顾客停留久）",
+                CatZone.Door => "门口（客流多）",
                 _ => "猫窝",
             };
 
@@ -121,73 +104,98 @@ namespace CatCafe
             scaler.referenceResolution = new Vector2(1920, 1080);
             canvasGo.transform.SetParent(transform, false);
 
-            var topPanel = NewPanel("TopPanel", canvasGo.transform, new Vector2(20, -20), new Vector2(560, 200));
-            _timeText     = NewText("TimeText",     topPanel, font, 30, new Vector2(20, -20),  new Vector2(520, 40));
-            _coinsText    = NewText("CoinsText",    topPanel, font, 26, new Vector2(20, -70),  new Vector2(520, 36));
-            _catText      = NewText("CatText",      topPanel, font, 26, new Vector2(20, -115), new Vector2(520, 36));
-            _customerText = NewText("CustomerText", topPanel, font, 26, new Vector2(20, -155), new Vector2(520, 36));
+            // 顶部左上角：只显示三行（紧凑，不挡视野）
+            var panel = NewPanel("HudPanel", canvasGo.transform, new Vector2(16, -16), new Vector2(320, 120));
+            _timeText = NewText("TimeText", panel, font, 30, new Vector2(16, -14), new Vector2(288, 36));
+            _coinsText = NewText("CoinsText", panel, font, 26, new Vector2(16, -54), new Vector2(288, 32));
+            _catText = NewText("CatText", panel, font, 24, new Vector2(16, -90), new Vector2(288, 30));
 
-            var bottomPanel = NewPanel("BottomPanel", canvasGo.transform, new Vector2(20, -240), new Vector2(900, 130));
-            _orderText = NewText("OrderText", bottomPanel, font, 26, new Vector2(20, -20), new Vector2(500, 36));
-            _hintText  = NewText("HintText",  bottomPanel, font, 20, new Vector2(20, -80), new Vector2(860, 44));
-            _hintText.color = new Color(1f, 0.9f, 0.5f);
-            _hintText.text = "WASD移动 · 咖啡机E做拿铁 Q做猫爪 · 奶泡机E做卡布 · 装杯台E装杯/拉花 · 保温台E取Q/R选杯 · 猫前E/Q/R/F · 空格暂停";
+            // 萃取时机条（屏幕中央上方，默认隐藏）
+            BuildBrewPanel(canvasGo.transform, font);
 
-            BuildBrewGameUI(canvasGo.transform, font);
+            // 下落音游提示（奶泡机上方，默认隐藏）
+            BuildFrothPanel(canvasGo.transform, font);
+
+            // 拉花提示（默认隐藏）
+            BuildLatteArtPanel(canvasGo.transform, font);
         }
 
-        /// <summary>构建萃取时机条（屏幕中央下方，默认隐藏，小游戏时显示）。</summary>
-        private void BuildBrewGameUI(Transform canvasRoot, Font font)
+        private void BuildBrewPanel(Transform root, Font font)
         {
             _brewPanel = new GameObject("BrewPanel", typeof(RectTransform), typeof(Image));
-            _brewPanel.transform.SetParent(canvasRoot, false);
+            _brewPanel.transform.SetParent(root, false);
             var pr = _brewPanel.GetComponent<RectTransform>();
             pr.anchorMin = new Vector2(0.5f, 1f);
             pr.anchorMax = new Vector2(0.5f, 1f);
             pr.pivot = new Vector2(0.5f, 1f);
-            pr.anchoredPosition = new Vector2(0, -460);
-            pr.sizeDelta = new Vector2(520, 100);
+            pr.anchoredPosition = new Vector2(0, -80);
+            pr.sizeDelta = new Vector2(520, 80);
             _brewPanel.GetComponent<Image>().color = new Color(0, 0, 0, 0.55f);
 
-            // 标题
-            var title = NewText("BrewTitle", _brewPanel.transform, font, 24, new Vector2(20, -12), new Vector2(480, 30));
-            title.text = "萃取时机条：再按 E 停住指针";
+            var title = NewText("BrewTitle", _brewPanel.transform, font, 24, new Vector2(20, -10), new Vector2(480, 30));
+            title.text = "萃取：再按 E 停住指针";
 
-            // 底槽（时机条）
             var barGo = new GameObject("Bar", typeof(RectTransform), typeof(Image));
             barGo.transform.SetParent(_brewPanel.transform, false);
             _brewBar = barGo.GetComponent<RectTransform>();
-            AnchorTopLeft(_brewBar, new Vector2(20, -52), new Vector2(480, 20));
+            AnchorTopLeft(_brewBar, new Vector2(20, -46), new Vector2(480, 18));
             barGo.GetComponent<Image>().color = new Color(0.25f, 0.25f, 0.3f);
 
-            // 完美区高亮（中央，宽度 = 2*perfectHalfWidth）
             var zoneGo = new GameObject("PerfectZone", typeof(RectTransform), typeof(Image));
             zoneGo.transform.SetParent(barGo.transform, false);
-            _perfectZone = zoneGo.GetComponent<RectTransform>();
-            _perfectZone.anchorMin = new Vector2(0.5f, 0f);
-            _perfectZone.anchorMax = new Vector2(0.5f, 1f);
-            _perfectZone.pivot = new Vector2(0.5f, 0.5f);
-            _perfectZone.sizeDelta = new Vector2(96f, 20f); // 480 * 0.24 ≈ 完美区总宽
-            _perfectZone.anchoredPosition = Vector2.zero;
+            var zone = zoneGo.GetComponent<RectTransform>();
+            zone.anchorMin = new Vector2(0.5f, 0f);
+            zone.anchorMax = new Vector2(0.5f, 1f);
+            zone.pivot = new Vector2(0.5f, 0.5f);
+            zone.sizeDelta = new Vector2(96f, 18f);
+            zone.anchoredPosition = Vector2.zero;
             zoneGo.GetComponent<Image>().color = new Color(0.3f, 0.9f, 0.4f, 0.9f);
 
-            // 指针
             var ptrGo = new GameObject("Pointer", typeof(RectTransform), typeof(Image));
             ptrGo.transform.SetParent(barGo.transform, false);
             _brewPointer = ptrGo.GetComponent<RectTransform>();
             _brewPointer.anchorMin = new Vector2(0, 0.5f);
             _brewPointer.anchorMax = new Vector2(0, 0.5f);
             _brewPointer.pivot = new Vector2(0.5f, 0.5f);
-            _brewPointer.sizeDelta = new Vector2(10f, 32f);
-            _brewPointer.anchoredPosition = new Vector2(0, 0f);
+            _brewPointer.sizeDelta = new Vector2(10f, 28f);
+            _brewPointer.anchoredPosition = Vector2.zero;
             ptrGo.GetComponent<Image>().color = new Color(1f, 0.9f, 0.3f);
 
-            // 品质文字（提示当前停在哪个档）
-            _brewQualityText = NewText("BrewQuality", _brewPanel.transform, font, 20, new Vector2(400, -52), new Vector2(100, 24));
-            _brewQualityText.alignment = TextAnchor.MiddleRight;
-            _brewQualityText.text = "";
+            _brewPanel.SetActive(false);
+        }
 
-            _brewPanel.SetActive(false); // 默认隐藏
+        private void BuildFrothPanel(Transform root, Font font)
+        {
+            _frothPanel = new GameObject("FrothPanel", typeof(RectTransform), typeof(Image));
+            _frothPanel.transform.SetParent(root, false);
+            var pr = _frothPanel.GetComponent<RectTransform>();
+            pr.anchorMin = new Vector2(0.5f, 1f);
+            pr.anchorMax = new Vector2(0.5f, 1f);
+            pr.pivot = new Vector2(0.5f, 1f);
+            pr.anchoredPosition = new Vector2(0, -80);
+            pr.sizeDelta = new Vector2(420, 70);
+            _frothPanel.GetComponent<Image>().color = new Color(0, 0, 0, 0.55f);
+
+            _frothText = NewText("FrothText", _frothPanel.transform, font, 24, new Vector2(16, -14), new Vector2(388, 50));
+            _frothText.alignment = TextAnchor.MiddleCenter;
+            _frothPanel.SetActive(false);
+        }
+
+        private void BuildLatteArtPanel(Transform root, Font font)
+        {
+            _latteArtPanel = new GameObject("LatteArtPanel", typeof(RectTransform), typeof(Image));
+            _latteArtPanel.transform.SetParent(root, false);
+            var pr = _latteArtPanel.GetComponent<RectTransform>();
+            pr.anchorMin = new Vector2(0.5f, 1f);
+            pr.anchorMax = new Vector2(0.5f, 1f);
+            pr.pivot = new Vector2(0.5f, 1f);
+            pr.anchoredPosition = new Vector2(0, -80);
+            pr.sizeDelta = new Vector2(420, 70);
+            _latteArtPanel.GetComponent<Image>().color = new Color(0, 0, 0, 0.55f);
+
+            _latteArtText = NewText("LatteArtText", _latteArtPanel.transform, font, 24, new Vector2(16, -14), new Vector2(388, 50));
+            _latteArtText.alignment = TextAnchor.MiddleCenter;
+            _latteArtPanel.SetActive(false);
         }
 
         private Transform NewPanel(string name, Transform parent, Vector2 pos, Vector2 size)

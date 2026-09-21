@@ -44,10 +44,27 @@ namespace CatCafe
             else
             {
                 // 没抱猫：找最近的猫实体抱起
-                var target = FindNearest();
-                if (target is CatView cat && !flow.Cat.IsCarried)
-                    flow.PickUpCat();
+                var cat = FindNearestCat();
+                if (cat != null) flow.PickUpCat();
             }
+        }
+
+        /// <summary>找主角附近的猫实体（抱猫用）。</summary>
+        private CatView FindNearestCat()
+        {
+            CatView best = null;
+            float bestDist = float.MaxValue;
+            Vector2 pos = transform.position;
+            foreach (var cat in FindObjectsOfType<CatView>())
+            {
+                float d = Vector2.Distance(cat.transform.position, pos);
+                if (d <= 1.8f && d < bestDist)
+                {
+                    bestDist = d;
+                    best = cat;
+                }
+            }
+            return best;
         }
 
         /// <summary>找主角交互范围内的猫垫（放猫用）。</summary>

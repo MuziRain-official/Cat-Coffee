@@ -55,16 +55,8 @@ namespace CatCafe
         public int ServedCount { get; private set; }
         public int LeftCount { get; private set; }
 
-        /// <summary>猫咪心情对消费的增益系数。</summary>
-        public float MoodMultiplier
-        {
-            get
-            {
-                if (_cat.IsBoosted(_config)) return 1.2f;
-                if (_cat.IsPenalized(_config)) return 0.8f;
-                return 1f;
-            }
-        }
+        /// <summary>猫咪心情对消费的增益系数（现固定 1.0，无三态）。</summary>
+        public float MoodMultiplier => 1f;
 
         // —— 玩家操作 ——
 
@@ -77,9 +69,10 @@ namespace CatCafe
             _order.Start(recipe);
             _order.StartBrewing();
 
+            // 吧台猫增益：完美区宽度放大（固定，无三态强度）
             float bonus = 0f;
             if (_cat.Zone == CatZone.Bar && !_cat.IsCarried)
-                bonus = _config.barZonePerfectWidthBonus * _cat.GainStrength(_config);
+                bonus = 0.3f;
             _brewGame.PerfectWidthMultiplier = 1f + bonus;
             _brewGame.Start();
 
@@ -102,19 +95,19 @@ namespace CatCafe
             if (_order.Step != OrderStep.None) return false;
             _order.Start(RecipeType.Cappuccino);
             _order.StartFrothing();
-            _frothGame.Start(_config.frothBeatInterval);
+            _frothGame.Start(_config.frothFallSpeed);
             _ledger.RecordCost(_config.cappuccinoCost);
             return true;
         }
 
-        /// <summary>打奶泡连击拍。返回是否命中。</summary>
-        public bool TapFroth()
+        /// <summary>下落音游按 E 判定。返回判定结果。</summary>
+        public NoteJudgement TapFroth()
         {
-            if (!_frothGame.IsActive) return false;
-            bool hit = _frothGame.Tap();
+            if (!_frothGame.IsActive) return NoteJudgement.Miss;
+            var j = _frothGame.Tap();
             if (!_frothGame.IsActive) // 游戏刚结束
                 _order.CompleteFroth(_frothGame.Result());
-            return hit;
+            return j;
         }
 
         /// <summary>回设备取原料。</summary>
@@ -189,9 +182,9 @@ namespace CatCafe
             _warmerCursor = (_warmerCursor + delta + _warmer.Count) % _warmer.Count;
         }
 
-        public void FeedCat() => _cat.Feed(_config);
-        public void CleanCat() => _cat.Clean(_config);
-        public void PetCat() => _cat.Pet(_config);
+        public void FeedCat() { }
+        public void CleanCat() { }
+        public void PetCat() { }
 
         public bool PickUpCat()
         {
@@ -214,12 +207,19 @@ namespace CatCafe
             if (IsDayOver) return 0;
 
             _clock.Tick(deltaTime);
-            _cat.Tick(deltaTime, _config);
             _brewGame.Tick(deltaTime, _config.swingSpeed);
             _frothGame.Tick(deltaTime);
             _latteArtGame.Tick(deltaTime);
             _order.TickExtract(deltaTime, _config.extractSeconds);
-            _warmer.Tick(deltaTime, _config.freshDurationSeconds);
+
+            // 吧台猫增益：保鲜度下降减速（新鲜度更持久）
+            float freshSlow = (_cat.Zone == CatZone.Bar && !_cat.IsCarried) ? _config.barZoneFreshnessSlow : 0f;
+            _warmer.Tick(deltaTime * (1f - freshSlow), _config.freshDurationSeconds);
+
+            // 吧台猫增益：萃取读条加速
+            float extractBoost = (_cat.Zone == CatZone.Bar && !_cat.IsCarried) ? _config.barZoneSpeedBoost : 0f;
+            if (_order.Step == OrderStep.Extracting)
+                _order.TickExtract(deltaTime * (1f + extractBoost), _config.extractSeconds);
 
             // 打奶泡游戏自然结束（节拍走完）→ 结算订单
             if (_order.Step == OrderStep.Frothing && !_frothGame.IsActive)
@@ -228,9 +228,10 @@ namespace CatCafe
             int paidThisFrame = 0;
             SpawnIfDue(deltaTime);
 
+            // 餐桌旁猫增益：顾客停留更久（耐心下降减速）
             float patienceSlow = 0f;
             if (_cat.Zone == CatZone.Seat && !_cat.IsCarried)
-                patienceSlow = _config.seatZonePatienceSlow * _cat.GainStrength(_config);
+                patienceSlow = _config.seatZoneStayLonger;
 
             foreach (var c in _customers)
             {
@@ -275,7 +276,7 @@ namespace CatCafe
         {
             float spawnBoost = 0f;
             if (_cat.Zone == CatZone.Door && !_cat.IsCarried)
-                spawnBoost = _config.doorZoneSpawnBoost * _cat.GainStrength(_config);
+                spawnBoost = _config.doorZoneSpawnBoost;
 
             _spawnTimer -= deltaTime * (1f + spawnBoost);
             if (_spawnTimer > 0f) return;

@@ -122,7 +122,7 @@ namespace CatCafe
 
         private void MakeCatPad(string name, Vector3 pos, Color color, CatZone zone)
         {
-            var go = NewSprite(name, pos, new Vector2(1.1f, 1.1f), color, -1);
+            var go = NewArtObject(name, "cat_pad", pos, new Vector2(1.1f, 1.1f), color, -1);
             var pad = go.AddComponent<CatPad>();
             pad.Zone = zone;
         }

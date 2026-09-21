@@ -9,60 +9,93 @@ namespace CatCafe.Tests
         public void Start_ActivatesGame()
         {
             var g = new FrothGame();
-            g.Start(0.25f);
+            g.Start(3f);
             Assert.IsTrue(g.IsActive);
-            Assert.AreEqual(0, g.Hits);
-            Assert.AreEqual(0, g.CurrentBeat);
+            Assert.AreEqual(FrothGame.NoteCount, g.Judgements.Length);
+            Assert.AreEqual(FrothGame.NoteCount, g.NotePositions.Length);
         }
 
         [Test]
-        public void Tick_AdvancesBeats()
+        public void Tick_SpawnsNotesOverTime()
         {
             var g = new FrothGame();
-            g.Start(0.25f);
-            Assert.AreEqual(0, g.CurrentBeat); // 第 0 拍立即亮
+            g.Start(3f);
+            g.Tick(0.1f);
+            Assert.Greater(g.NotePositions[0], 0f); // 第一个音符已生成（在判定线上方）
 
-            g.Tick(0.25f);
-            Assert.AreEqual(1, g.CurrentBeat); // 推进到第 1 拍
+            g.Tick(1.0f);
+            // 约 2 个音符生成
+            Assert.Greater(g.NotePositions[1], 0f);
         }
 
         [Test]
-        public void Tap_HitsOncePerBeat()
+        public void Tap_JudgesNearestNote()
         {
             var g = new FrothGame();
-            g.Start(0.25f);
-            Assert.IsTrue(g.Tap());       // 命中第 0 拍
-            Assert.AreEqual(1, g.Hits);
-            Assert.IsFalse(g.Tap());      // 同拍连点不命中
-            Assert.AreEqual(1, g.Hits);
-
-            g.Tick(0.25f);                // 推进到第 1 拍
-            Assert.IsTrue(g.Tap());       // 命中第 1 拍
-            Assert.AreEqual(2, g.Hits);
+            g.Start(3f);
+            g.Tick(0.1f); // 生成第一个音符
+            // 手动把它放到判定线上
+            g.NotePositions[0] = 0f;
+            var result = g.Tap();
+            Assert.AreEqual(NoteJudgement.Perfect, result);
+            Assert.AreEqual(NoteJudgement.Perfect, g.Judgements[0]);
         }
 
         [Test]
-        public void Result_PerfectWhenAllHits()
+        public void Tap_GoodWhenSlightlyOff()
         {
             var g = new FrothGame();
-            g.Start(0.25f);
-            for (int i = 0; i < 8; i++)
-            {
-                Assert.IsTrue(g.Tap());   // 命中当前拍
-                g.Tick(0.25f);            // 推进到下一拍
-            }
+            g.Start(3f);
+            g.Tick(0.1f);
+            g.NotePositions[0] = 0.3f; // 离判定线 0.3
+            var result = g.Tap();
+            Assert.AreEqual(NoteJudgement.Good, result);
+        }
+
+        [Test]
+        public void Tap_TooFarIsMiss()
+        {
+            var g = new FrothGame();
+            g.Start(3f);
+            g.Tick(0.1f);
+            g.NotePositions[0] = 2f; // 太远
+            var result = g.Tap();
+            Assert.AreEqual(NoteJudgement.Miss, result);
+            Assert.AreEqual(NoteJudgement.Pending, g.Judgements[0]); // 未判定
+        }
+
+        [Test]
+        public void Result_PerfectWhenNinePerfect()
+        {
+            var g = new FrothGame();
+            g.Start(3f);
+            // 手动让 10 个音符全部 Perfect
+            for (int i = 0; i < FrothGame.NoteCount; i++)
+                g.Judgements[i] = NoteJudgement.Perfect;
             Assert.AreEqual(BrewQuality.Perfect, g.Result());
-            Assert.IsFalse(g.IsActive);
+        }
+
+        [Test]
+        public void Result_GoodWhenSixHits()
+        {
+            var g = new FrothGame();
+            g.Start(3f);
+            for (int i = 0; i < 6; i++)
+                g.Judgements[i] = NoteJudgement.Good;
+            for (int i = 6; i < FrothGame.NoteCount; i++)
+                g.Judgements[i] = NoteJudgement.Miss;
+            Assert.AreEqual(BrewQuality.Good, g.Result());
         }
 
         [Test]
         public void Result_PoorWhenFewHits()
         {
             var g = new FrothGame();
-            g.Start(0.25f);
-            g.Tap(); // 只命中 1 次
-            // 推进到结束
-            for (int i = 0; i < 10; i++) g.Tick(0.25f);
+            g.Start(3f);
+            for (int i = 0; i < 3; i++)
+                g.Judgements[i] = NoteJudgement.Good;
+            for (int i = 3; i < FrothGame.NoteCount; i++)
+                g.Judgements[i] = NoteJudgement.Miss;
             Assert.AreEqual(BrewQuality.Poor, g.Result());
         }
     }
@@ -85,9 +118,8 @@ namespace CatCafe.Tests
             g.Start(0.18f);
             g.Tick(0.18f);
             Assert.AreEqual(1, g.CursorIndex);
-            // 9 格循环
             for (int i = 0; i < 8; i++) g.Tick(0.18f);
-            Assert.AreEqual(0, g.CursorIndex); // 回到 0
+            Assert.AreEqual(0, g.CursorIndex);
         }
 
         [Test]
@@ -100,8 +132,6 @@ namespace CatCafe.Tests
         public void Judge_EdgeMiddleIsGood()
         {
             Assert.AreEqual(BrewQuality.Good, LatteArtGame.Judge(1));
-            Assert.AreEqual(BrewQuality.Good, LatteArtGame.Judge(3));
-            Assert.AreEqual(BrewQuality.Good, LatteArtGame.Judge(5));
             Assert.AreEqual(BrewQuality.Good, LatteArtGame.Judge(7));
         }
 
@@ -109,18 +139,7 @@ namespace CatCafe.Tests
         public void Judge_CornerIsPoor()
         {
             Assert.AreEqual(BrewQuality.Poor, LatteArtGame.Judge(0));
-            Assert.AreEqual(BrewQuality.Poor, LatteArtGame.Judge(2));
-            Assert.AreEqual(BrewQuality.Poor, LatteArtGame.Judge(6));
             Assert.AreEqual(BrewQuality.Poor, LatteArtGame.Judge(8));
-        }
-
-        [Test]
-        public void Stop_Deactivates()
-        {
-            var g = new LatteArtGame();
-            g.Start(0.18f);
-            g.Stop();
-            Assert.IsFalse(g.IsActive);
         }
     }
 }

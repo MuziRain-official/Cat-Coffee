@@ -43,33 +43,15 @@ namespace CatCafe
         [Tooltip("萃取读条时长（秒），小游戏完成后咖啡机实际萃取")]
         public float extractSeconds = 5f;
 
-        [Header("猫咪系统")]
-        public float catStatMin = 0f;
-        public float catStatMax = 100f;
-        [Tooltip("饥饿每 N 秒 -1")]
-        public float hungerDecayInterval = 9f;
-        [Tooltip("清洁每 N 秒 -1")]
-        public float hygieneDecayInterval = 18f;
-        [Tooltip("心情每 N 秒 -1（基础；饿或脏时翻倍）")]
-        public float moodDecayInterval = 12f;
-        [Tooltip("喂食恢复量")]
-        public float feedRecovery = 50f;
-        [Tooltip("铲屎恢复量")]
-        public float cleanRecovery = 50f;
-        [Tooltip("互动恢复量（心情）")]
-        public float petRecovery = 25f;
-        [Tooltip("三态均值 > 此阈值 → 增益")]
-        public float boostThreshold = 70f;
-        [Tooltip("三态均值 < 此阈值 → 惩罚")]
-        public float penaltyThreshold = 30f;
-
-        [Header("猫咪区域增益")]
-        [Tooltip("吧台区：萃取小游戏完美区宽度加成比例")]
-        public float barZonePerfectWidthBonus = 0.3f;
-        [Tooltip("座位区：顾客耐心下降减速比例")]
-        public float seatZonePatienceSlow = 0.25f;
-        [Tooltip("门口区：顾客生成加速比例")]
-        public float doorZoneSpawnBoost = 0.2f;
+        [Header("猫咪系统（区域固定增益，无三态）")]
+        [Tooltip("吧台区：制作时间加速比例（0.2=快20%）")]
+        public float barZoneSpeedBoost = 0.2f;
+        [Tooltip("吧台区：新鲜度下降减速比例（0.5=慢50%，即保鲜更久）")]
+        public float barZoneFreshnessSlow = 0.5f;
+        [Tooltip("餐桌旁：顾客停留更久比例（0.3=多等30%）")]
+        public float seatZoneStayLonger = 0.3f;
+        [Tooltip("门口区：顾客生成加速比例（0.3=多30%客流）")]
+        public float doorZoneSpawnBoost = 0.3f;
         [Tooltip("抱猫时主角移动减速比例")]
         public float carryCatSlow = 0.3f;
 
@@ -90,9 +72,9 @@ namespace CatCafe
         [Range(0f, 1f)]
         public float reputationRate = 0.1f;
 
-        [Header("制作（节奏连击小游戏）")]
-        [Tooltip("打奶泡节拍间隔（秒）")]
-        public float frothBeatInterval = 0.25f;
+        [Header("制作（下落式音游）")]
+        [Tooltip("奶泡音符下落速度（y单位/秒）")]
+        public float frothFallSpeed = 3f;
 
         [Header("制作（拉花小游戏）")]
         [Tooltip("拉花格子切换间隔（秒）")]

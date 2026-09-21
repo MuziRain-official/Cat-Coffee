@@ -156,9 +156,10 @@ namespace CatCafe.Tests
         }
 
         [Test]
-        public void MoodMultiplier_InitialCatState_IsBoosted()
+        public void MoodMultiplier_IsAlwaysOne_NoStats()
         {
-            Assert.AreEqual(1.2f, _flow.MoodMultiplier, 0.01f);
+            // 三态已移除，消费系数固定 1.0
+            Assert.AreEqual(1f, _flow.MoodMultiplier, 0.01f);
         }
     }
 }
