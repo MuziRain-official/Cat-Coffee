@@ -74,13 +74,29 @@ namespace CatCafe
         public float carryCatSlow = 0.3f;
 
         [Header("经济系统")]
-        [Tooltip("咖啡售价（金币）")]
-        public int coffeePrice = 12;
-        [Tooltip("咖啡成本（金币）")]
-        public int coffeeCost = 4;
+        [Tooltip("拿铁售价（金币）")]
+        public int lattePrice = 12;
+        [Tooltip("拿铁成本（金币）")]
+        public int latteCost = 4;
+        [Tooltip("卡布奇诺售价（金币）")]
+        public int cappuccinoPrice = 16;
+        [Tooltip("卡布奇诺成本（金币）")]
+        public int cappuccinoCost = 6;
+        [Tooltip("猫爪咖啡售价（金币）")]
+        public int catPawPrice = 22;
+        [Tooltip("猫爪咖啡成本（金币）")]
+        public int catPawCost = 8;
         [Tooltip("声望转化率（利润 × 比例）")]
         [Range(0f, 1f)]
         public float reputationRate = 0.1f;
+
+        [Header("制作（节奏连击小游戏）")]
+        [Tooltip("打奶泡节拍间隔（秒）")]
+        public float frothBeatInterval = 0.25f;
+
+        [Header("制作（拉花小游戏）")]
+        [Tooltip("拉花格子切换间隔（秒）")]
+        public float latteArtCellInterval = 0.18f;
 
         [Header("备餐系统")]
         [Tooltip("保温台容量（杯）")]

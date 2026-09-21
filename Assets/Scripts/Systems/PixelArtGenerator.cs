@@ -56,6 +56,20 @@ namespace CatCafe
             return c.ToSprite();
         }
 
+        public static Sprite Frother()
+        {
+            var c = new PixelCanvas(N);
+            c.FillRect(3, 3, 13, 13, PixelPalette.CreamDark); // 机身
+            c.FillRect(4, 4, 12, 12, PixelPalette.White);     // 奶罐
+            // 奶泡
+            c.FillRect(5, 5, 11, 8, PixelPalette.MilkFoam);
+            // 蒸汽口
+            c.FillRect(6, 2, 10, 4, PixelPalette.Wood);
+            // 底座
+            c.FillRect(3, 12, 13, 14, PixelPalette.DarkWood);
+            return c.ToSprite();
+        }
+
         public static Sprite CoffeeCup()
         {
             var c = new PixelCanvas(N);
@@ -203,6 +217,7 @@ namespace CatCafe
             "coffee_machine" => CoffeeMachine(),
             "counter" => Counter(),
             "warmer" => Warmer(),
+            "frother" => Frother(),
             "coffee_cup" => CoffeeCup(),
             "cat" => Cat(),
             "player" => Player(),

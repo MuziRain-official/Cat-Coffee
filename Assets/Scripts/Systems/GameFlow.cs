@@ -18,10 +18,13 @@ namespace CatCafe
         private readonly List<Customer> _customers = new List<Customer>();
         private readonly Order _order = new Order();
         private readonly BrewGame _brewGame = new BrewGame();
+        private readonly FrothGame _frothGame = new FrothGame();
+        private readonly LatteArtGame _latteArtGame = new LatteArtGame();
         private readonly Warmer _warmer;
         private readonly System.Random _rng;
 
         private float _spawnTimer;
+        private int _warmerCursor; // 保温台选杯光标
 
         public GameFlow(GameConfigSO config, int seed = 0)
         {
@@ -34,21 +37,25 @@ namespace CatCafe
             _spawnTimer = NextSpawnInterval();
         }
 
-        // —— 只读视图（供 UI / 测试）——
+        // —— 只读视图 ——
         public DayClock Clock => _clock;
         public CatState Cat => _cat;
         public DayLedger Ledger => _ledger;
         public IReadOnlyList<Customer> Customers => _customers;
         public Order Order => _order;
         public BrewGame BrewGame => _brewGame;
+        public FrothGame FrothGame => _frothGame;
+        public LatteArtGame LatteArtGame => _latteArtGame;
         public Warmer Warmer => _warmer;
         public bool IsBrewGameActive => _brewGame.IsActive;
+        public bool IsFrothGameActive => _frothGame.IsActive;
+        public bool IsLatteArtGameActive => _latteArtGame.IsActive;
+        public int WarmerCursor => _warmerCursor;
         public bool IsDayOver => _clock.IsDayOver(_config.dayDurationSeconds);
         public int ServedCount { get; private set; }
-        /// <summary>累计流失顾客数（未付费）。</summary>
         public int LeftCount { get; private set; }
 
-        /// <summary>猫咪心情对消费的增益系数：增益 1.2 / 惩罚 0.8 / 正常 1.0。</summary>
+        /// <summary>猫咪心情对消费的增益系数。</summary>
         public float MoodMultiplier
         {
             get
@@ -61,33 +68,56 @@ namespace CatCafe
 
         // —— 玩家操作 ——
 
-        /// <summary>开始萃取（第 1 步）：启动时机条小游戏。</summary>
-        public bool Brew()
+        /// <summary>开始做拿铁或猫爪咖啡（两者都需要萃取）。空闲时有效。</summary>
+        public bool Brew(RecipeType recipe = RecipeType.Latte)
         {
             if (_order.Step != OrderStep.None) return false;
+            if (recipe != RecipeType.Latte && recipe != RecipeType.CatPaw) return false;
+
+            _order.Start(recipe);
             _order.StartBrewing();
 
-            // 吧台猫增益：完美区宽度放大
             float bonus = 0f;
             if (_cat.Zone == CatZone.Bar && !_cat.IsCarried)
                 bonus = _config.barZonePerfectWidthBonus * _cat.GainStrength(_config);
             _brewGame.PerfectWidthMultiplier = 1f + bonus;
             _brewGame.Start();
 
-            _ledger.RecordCost(_config.coffeeCost); // 制作时扣成本
+            _ledger.RecordCost(recipe == RecipeType.CatPaw ? _config.catPawCost : _config.latteCost);
             return true;
         }
 
-        /// <summary>玩家停指针锁定品质（第 1 步完成）。仅在萃取小游戏进行中有效。</summary>
+        /// <summary>停止萃取时机条，锁定品质。</summary>
         public bool StopBrewGame()
         {
             if (!_brewGame.IsActive) return false;
-            var quality = _brewGame.Stop(_config);
-            _order.CompleteBrew(quality);
+            var q = _brewGame.Stop(_config);
+            _order.CompleteBrew(q);
             return true;
         }
 
-        /// <summary>回咖啡机取原料。仅在萃取完成后有效。</summary>
+        /// <summary>开始做卡布奇诺（打奶泡）。空闲时有效。</summary>
+        public bool Froth()
+        {
+            if (_order.Step != OrderStep.None) return false;
+            _order.Start(RecipeType.Cappuccino);
+            _order.StartFrothing();
+            _frothGame.Start(_config.frothBeatInterval);
+            _ledger.RecordCost(_config.cappuccinoCost);
+            return true;
+        }
+
+        /// <summary>打奶泡连击拍。返回是否命中。</summary>
+        public bool TapFroth()
+        {
+            if (!_frothGame.IsActive) return false;
+            bool hit = _frothGame.Tap();
+            if (!_frothGame.IsActive) // 游戏刚结束
+                _order.CompleteFroth(_frothGame.Result());
+            return hit;
+        }
+
+        /// <summary>回设备取原料。</summary>
         public bool Pickup()
         {
             if (_order.Step != OrderStep.ReadyToPickup) return false;
@@ -95,7 +125,7 @@ namespace CatCafe
             return true;
         }
 
-        /// <summary>装杯（第 2 步，即时）。仅在持原料时有效。</summary>
+        /// <summary>装杯。</summary>
         public bool Cup()
         {
             if (_order.Step != OrderStep.HoldingIngredients) return false;
@@ -103,7 +133,25 @@ namespace CatCafe
             return true;
         }
 
-        /// <summary>上菜给指定顾客（新鲜度默认 1=现做）。</summary>
+        /// <summary>开始拉花（猫爪装杯后）。</summary>
+        public bool StartLatteArt()
+        {
+            if (_order.Step != OrderStep.ReadyToLatteArt) return false;
+            _order.StartLatteArt();
+            _latteArtGame.Start(_config.latteArtCellInterval);
+            return true;
+        }
+
+        /// <summary>停止拉花（按 E 定品质）。</summary>
+        public bool StopLatteArt()
+        {
+            if (!_latteArtGame.IsActive) return false;
+            _latteArtGame.Stop();
+            _order.CompleteLatteArt();
+            return true;
+        }
+
+        /// <summary>上菜给指定顾客（菜品需匹配）。</summary>
         public bool ServeTo(Customer customer)
         {
             if (!_order.Serve(customer, _config.customerEatingSeconds)) return false;
@@ -111,52 +159,40 @@ namespace CatCafe
             return true;
         }
 
-        /// <summary>把手里成品放入保温台（备餐）。仅在持成品(ReadyToServe)时有效。</summary>
+        /// <summary>把手里成品放入保温台。</summary>
         public bool StoreToWarmer()
         {
             if (_order.Step != OrderStep.ReadyToServe) return false;
             if (_warmer.IsFull) return false;
-            _warmer.Store(_order.Quality);
-            _order.ResetToNone(); // 订单完成（咖啡入保温台）
+            _warmer.Store(_order.Recipe, _order.Quality);
+            _order.ResetToNone();
             return true;
         }
 
-        /// <summary>从保温台取一杯端到手里（不自动上菜）。FIFO，空闲时有效。</summary>
-        public bool TakeFromWarmer()
+        /// <summary>从保温台按光标索引取一杯。</summary>
+        public bool TakeFromWarmerAt(int index)
         {
-            var cup = _warmer.Take();
+            var cup = _warmer.TakeAt(index);
             if (cup == null) return false;
-            if (!_order.TakeFromWarmer(cup.Quality, cup.Freshness))
+            if (!_order.TakeFromWarmer(cup.Recipe, cup.Quality, cup.Freshness))
             {
-                _warmer.ReturnCup(cup); // 手里已经有东西，放回
+                _warmer.ReturnCup(cup);
                 return false;
             }
             return true;
         }
 
-        private Customer EarliestWaiting()
+        /// <summary>保温台选杯光标左右移动。</summary>
+        public void MoveWarmerCursor(int delta)
         {
-            foreach (var c in _customers)
-                if (c.Phase == CustomerPhase.Waiting) return c;
-            return null;
-        }
-
-        /// <summary>给当前待上菜订单选一个最早等待的顾客。</summary>
-        public bool ServeToEarliestWaiting()
-        {
-            foreach (var c in _customers)
-            {
-                if (c.Phase == CustomerPhase.Waiting)
-                    return ServeTo(c);
-            }
-            return false;
+            if (_warmer.Count == 0) { _warmerCursor = 0; return; }
+            _warmerCursor = (_warmerCursor + delta + _warmer.Count) % _warmer.Count;
         }
 
         public void FeedCat() => _cat.Feed(_config);
         public void CleanCat() => _cat.Clean(_config);
         public void PetCat() => _cat.Pet(_config);
 
-        /// <summary>抱起猫（F 键）。成功返回 true。</summary>
         public bool PickUpCat()
         {
             if (_cat.IsCarried) return false;
@@ -164,7 +200,6 @@ namespace CatCafe
             return true;
         }
 
-        /// <summary>把猫放到某区域（猫垫）。成功返回 true。</summary>
         public bool PutDownCat(CatZone zone)
         {
             if (!_cat.IsCarried) return false;
@@ -174,32 +209,31 @@ namespace CatCafe
 
         // —— 推进 ——
 
-        /// <summary>推进一帧。返回本帧新付费的顾客数。</summary>
         public int Tick(float deltaTime)
         {
             if (IsDayOver) return 0;
 
             _clock.Tick(deltaTime);
             _cat.Tick(deltaTime, _config);
-            _brewGame.Tick(deltaTime, _config.swingSpeed); // 推进萃取时机条摆动
-            _order.TickExtract(deltaTime, _config.extractSeconds); // 推进咖啡机萃取读条
-            _warmer.Tick(deltaTime, _config.freshDurationSeconds); // 保温台新鲜度下降
+            _brewGame.Tick(deltaTime, _config.swingSpeed);
+            _frothGame.Tick(deltaTime);
+            _latteArtGame.Tick(deltaTime);
+            _order.TickExtract(deltaTime, _config.extractSeconds);
+            _warmer.Tick(deltaTime, _config.freshDurationSeconds);
 
             int paidThisFrame = 0;
             SpawnIfDue(deltaTime);
 
-            // 顾客耐心减速：座位区猫增益
             float patienceSlow = 0f;
             if (_cat.Zone == CatZone.Seat && !_cat.IsCarried)
                 patienceSlow = _config.seatZonePatienceSlow * _cat.GainStrength(_config);
 
-            // 推进顾客，处理付费/流失
             foreach (var c in _customers)
             {
                 c.Tick(deltaTime, patienceSlow);
                 if (c.Phase == CustomerPhase.Paid)
                 {
-                    int price = PriceFor(c.ServedQuality, c.ServedFreshness);
+                    int price = PriceFor(c.OrderedRecipe, c.ServedQuality, c.ServedFreshness);
                     _ledger.RecordRevenue(price);
                     paidThisFrame++;
                 }
@@ -213,9 +247,16 @@ namespace CatCafe
             return paidThisFrame;
         }
 
-        /// <summary>售价 = 基础价 × 品质倍率 × 心情系数 × 新鲜度（向下取整到 0 以上）。</summary>
-        private int PriceFor(BrewQuality quality, float freshness = 1f)
+        /// <summary>售价 = 菜品基础价 × 品质倍率 × 心情系数 × 新鲜度。</summary>
+        private int PriceFor(RecipeType recipe, BrewQuality quality, float freshness = 1f)
         {
+            int basePrice = recipe switch
+            {
+                RecipeType.Latte => _config.lattePrice,
+                RecipeType.Cappuccino => _config.cappuccinoPrice,
+                RecipeType.CatPaw => _config.catPawPrice,
+                _ => _config.lattePrice,
+            };
             float qMult = quality switch
             {
                 BrewQuality.Perfect => _config.perfectPriceMult,
@@ -223,12 +264,11 @@ namespace CatCafe
                 _ => _config.goodPriceMult,
             };
             float fresh = Mathf.Clamp01(freshness);
-            return Math.Max(0, (int)Math.Round(_config.coffeePrice * qMult * MoodMultiplier * fresh));
+            return Math.Max(0, (int)Math.Round(basePrice * qMult * MoodMultiplier * fresh));
         }
 
         private void SpawnIfDue(float deltaTime)
         {
-            // 门口猫增益：生成间隔缩短（加速客流）
             float spawnBoost = 0f;
             if (_cat.Zone == CatZone.Door && !_cat.IsCarried)
                 spawnBoost = _config.doorZoneSpawnBoost * _cat.GainStrength(_config);
@@ -237,8 +277,11 @@ namespace CatCafe
             if (_spawnTimer > 0f) return;
             if (_customers.Count >= _config.maxCustomers) return;
 
+            // 随机点三种菜品之一
             var customer = new Customer();
-            customer.PlaceOrder(_config.customerPatienceSeconds);
+            var recipes = Recipe.All;
+            var recipe = recipes[_rng.Next(recipes.Length)];
+            customer.PlaceOrder(_config.customerPatienceSeconds, recipe);
             _customers.Add(customer);
             _spawnTimer = NextSpawnInterval();
         }

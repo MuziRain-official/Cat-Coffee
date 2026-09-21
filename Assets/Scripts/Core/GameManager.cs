@@ -56,7 +56,6 @@ namespace CatCafe
 
         public void Brew() => Flow.Brew();
         public void Cup() => Flow.Cup();
-        public void Serve() => Flow.ServeToEarliestWaiting();
         public void FeedCat() => Flow.FeedCat();
         public void CleanCat() => Flow.CleanCat();
         public void PetCat() => Flow.PetCat();

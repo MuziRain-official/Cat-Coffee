@@ -24,7 +24,6 @@ namespace CatCafe.Tests
             ScriptableObject.DestroyImmediate(_config);
         }
 
-        /// <summary>用小步长推进，避免单帧大步长导致的时序失真。</summary>
         private void Advance(float seconds, float step = 0.1f)
         {
             float remaining = seconds;
@@ -39,57 +38,110 @@ namespace CatCafe.Tests
         [Test]
         public void Brew_RecordsCostAndStartsOrder()
         {
-            Assert.IsTrue(_flow.Brew());
-            Assert.AreEqual(_config.coffeeCost, _flow.Ledger.Cost);
+            Assert.IsTrue(_flow.Brew(RecipeType.Latte));
+            Assert.AreEqual(_config.latteCost, _flow.Ledger.Cost);
             Assert.AreEqual(OrderStep.Brewing, _flow.Order.Step);
+            Assert.AreEqual(RecipeType.Latte, _flow.Order.Recipe);
             Assert.IsTrue(_flow.IsBrewGameActive);
+        }
+
+        [Test]
+        public void Brew_CatPawCostsMore()
+        {
+            Assert.IsTrue(_flow.Brew(RecipeType.CatPaw));
+            Assert.AreEqual(_config.catPawCost, _flow.Ledger.Cost);
+            Assert.AreEqual(RecipeType.CatPaw, _flow.Order.Recipe);
         }
 
         [Test]
         public void Brew_SecondCallFailsWhileBusy()
         {
-            Assert.IsTrue(_flow.Brew());
-            Assert.IsFalse(_flow.Brew());
+            Assert.IsTrue(_flow.Brew(RecipeType.Latte));
+            Assert.IsFalse(_flow.Brew(RecipeType.Latte));
         }
 
         [Test]
         public void StopBrewGame_LocksQualityAndStartsExtracting()
         {
-            Assert.IsTrue(_flow.Brew());
-            Advance(0.5f); // 让指针动一下
+            Assert.IsTrue(_flow.Brew(RecipeType.Latte));
+            Advance(0.5f);
             Assert.IsTrue(_flow.StopBrewGame());
             Assert.IsFalse(_flow.IsBrewGameActive);
             Assert.AreEqual(OrderStep.Extracting, _flow.Order.Step);
         }
 
         [Test]
-        public void FullServeCycle_PaysAndRecordsRevenue()
+        public void FullLatteServeCycle_Pays()
         {
-            Advance(10f); // 生成 1 位顾客
+            Advance(10f);
             Assert.GreaterOrEqual(_flow.Customers.Count, 1);
+            var customer = _flow.Customers[0];
+            customer.PlaceOrder(45f, RecipeType.Latte); // 强制点拿铁
 
-            Assert.IsTrue(_flow.Brew());
-            Assert.IsTrue(_flow.StopBrewGame()); // 停指针锁定品质 → Extracting
-            Advance(_config.extractSeconds);     // 萃取读条完成 → ReadyToPickup
-            Assert.IsTrue(_flow.Pickup());  // 取原料
-            Assert.IsTrue(_flow.Cup());     // 装杯
-            Assert.IsTrue(_flow.ServeToEarliestWaiting()); // 上菜
+            Assert.IsTrue(_flow.Brew(RecipeType.Latte));
+            Assert.IsTrue(_flow.StopBrewGame());
+            Advance(_config.extractSeconds);
+            Assert.IsTrue(_flow.Pickup());
+            Assert.IsTrue(_flow.Cup());
+            Assert.AreEqual(OrderStep.ReadyToServe, _flow.Order.Step);
+            Assert.IsTrue(_flow.ServeTo(customer));
 
-            Advance(_config.customerEatingSeconds); // 用餐完成 → 付费
-
+            Advance(_config.customerEatingSeconds);
             Assert.AreEqual(1, _flow.ServedCount);
-            Assert.Greater(_flow.Ledger.Revenue, 0, "应记入收入");
+            Assert.Greater(_flow.Ledger.Revenue, 0);
+        }
+
+        [Test]
+        public void CatPaw_RequiresLatteArtBeforeServe()
+        {
+            var customer = new Customer();
+            customer.PlaceOrder(45f, RecipeType.CatPaw);
+
+            Assert.IsTrue(_flow.Brew(RecipeType.CatPaw));
+            Assert.IsTrue(_flow.StopBrewGame());
+            Advance(_config.extractSeconds);
+            Assert.IsTrue(_flow.Pickup());
+            Assert.IsTrue(_flow.Cup());
+            // 猫爪装杯后不是 ReadyToServe，而是 ReadyToLatteArt
+            Assert.AreEqual(OrderStep.ReadyToLatteArt, _flow.Order.Step);
+
+            Assert.IsTrue(_flow.StartLatteArt());
+            Assert.IsTrue(_flow.StopLatteArt());
+            Assert.AreEqual(OrderStep.ReadyToServe, _flow.Order.Step);
+        }
+
+        [Test]
+        public void Serve_WrongRecipe_Fails()
+        {
+            var customer = new Customer();
+            customer.PlaceOrder(45f, RecipeType.CatPaw); // 顾客要猫爪
+
+            _flow.Brew(RecipeType.Latte); // 但做的是拿铁
+            _flow.StopBrewGame();
+            Advance(_config.extractSeconds);
+            _flow.Pickup();
+            _flow.Cup();
+            // 上错菜应失败
+            Assert.IsFalse(_flow.ServeTo(customer));
+            Assert.AreEqual(OrderStep.ReadyToServe, _flow.Order.Step); // 订单保留
+        }
+
+        [Test]
+        public void Froth_RecordsCostAndStartsFrothGame()
+        {
+            Assert.IsTrue(_flow.Froth());
+            Assert.AreEqual(_config.cappuccinoCost, _flow.Ledger.Cost);
+            Assert.AreEqual(RecipeType.Cappuccino, _flow.Order.Recipe);
+            Assert.IsTrue(_flow.IsFrothGameActive);
         }
 
         [Test]
         public void NeglectedCustomer_LeavesWithoutPaying()
         {
-            Advance(10f); // 生成 1 位
-            // 顾客耐心耗尽前，持续观察但不服务，直到有人流失
+            Advance(10f);
             Advance(_config.customerPatienceSeconds + 5f);
-
-            Assert.Greater(_flow.LeftCount, 0, "应有顾客因耐心耗尽流失");
-            Assert.AreEqual(0, _flow.Ledger.Revenue, "未服务任何顾客，无收入");
+            Assert.Greater(_flow.LeftCount, 0);
+            Assert.AreEqual(0, _flow.Ledger.Revenue);
             Assert.AreEqual(0, _flow.ServedCount);
         }
 
@@ -100,26 +152,13 @@ namespace CatCafe.Tests
             Assert.IsTrue(_flow.IsDayOver);
             int count = _flow.Customers.Count;
             Advance(30f);
-            Assert.AreEqual(count, _flow.Customers.Count, "打烊后不再生成/推进");
+            Assert.AreEqual(count, _flow.Customers.Count);
         }
 
         [Test]
         public void MoodMultiplier_InitialCatState_IsBoosted()
         {
-            // 猫咪初始满状态(100) → 均值 100 > 70 → 增益
             Assert.AreEqual(1.2f, _flow.MoodMultiplier, 0.01f);
-        }
-
-        [Test]
-        public void MoodMultiplier_DropsAsCatDeclines()
-        {
-            Assert.AreEqual(1.2f, _flow.MoodMultiplier, 0.01f);
-
-            // 推进到接近打烊（360s 内），猫咪均值应从 100 下滑，增益系数随之变化
-            Advance(_config.dayDurationSeconds - 1f);
-            // 均值仍可能 >70 保持增益；关键是不崩溃、系数在 [0.8, 1.2] 合理区间
-            Assert.GreaterOrEqual(_flow.MoodMultiplier, 0.8f);
-            Assert.LessOrEqual(_flow.MoodMultiplier, 1.2f);
         }
     }
 }

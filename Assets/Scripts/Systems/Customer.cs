@@ -30,17 +30,21 @@ namespace CatCafe
         /// <summary>本单咖啡新鲜度（0–1，保温台备餐时可能低于 1）。</summary>
         public float ServedFreshness { get; private set; } = 1f;
 
+        /// <summary>顾客点的菜品。</summary>
+        public RecipeType OrderedRecipe { get; private set; } = RecipeType.Latte;
+
         /// <summary>是否已付费（成功完成一单）。</summary>
         public bool HasPaid => Phase == CustomerPhase.Paid;
 
         /// <summary>是否流失（未付费）。</summary>
         public bool HasLeft => Phase == CustomerPhase.Left;
 
-        /// <summary>落座点单，进入等待。</summary>
-        public void PlaceOrder(float patienceSeconds)
+        /// <summary>落座点单（指定菜品），进入等待。</summary>
+        public void PlaceOrder(float patienceSeconds, RecipeType recipe)
         {
             Phase = CustomerPhase.Waiting;
             RemainingPatience = patienceSeconds;
+            OrderedRecipe = recipe;
         }
 
         /// <summary>上菜，进入用餐并锁定品质与新鲜度。仅在等待中有效。</summary>

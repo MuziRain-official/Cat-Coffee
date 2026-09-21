@@ -5,6 +5,7 @@ namespace CatCafe
     /// <summary>一杯放在保温台的成品咖啡。</summary>
     public class WarmCup
     {
+        public RecipeType Recipe;
         public BrewQuality Quality;
         /// <summary>新鲜度 0–1（1=刚出炉，随时间下降）。</summary>
         public float Freshness;
@@ -32,10 +33,10 @@ namespace CatCafe
         public bool IsFull => _cups.Count >= _capacity;
 
         /// <summary>放入一杯（成功返回 true）。</summary>
-        public bool Store(BrewQuality quality)
+        public bool Store(RecipeType recipe, BrewQuality quality)
         {
             if (IsFull) return false;
-            _cups.Add(new WarmCup { Quality = quality, Freshness = 1f });
+            _cups.Add(new WarmCup { Recipe = recipe, Quality = quality, Freshness = 1f });
             return true;
         }
 
@@ -45,6 +46,15 @@ namespace CatCafe
             if (_cups.Count == 0) return null;
             var cup = _cups[0];
             _cups.RemoveAt(0);
+            return cup;
+        }
+
+        /// <summary>按索引取出一杯（选杯用）。越界返回 null。</summary>
+        public WarmCup TakeAt(int index)
+        {
+            if (index < 0 || index >= _cups.Count) return null;
+            var cup = _cups[index];
+            _cups.RemoveAt(index);
             return cup;
         }
 
