@@ -53,6 +53,10 @@ namespace CatCafe
         public int WarmerCursor => _warmerCursor;
         /// <summary>是否处于保温台选择模式（打开选择栏）。</summary>
         public bool IsWarmerSelecting { get; private set; }
+        /// <summary>是否处于咖啡机选菜品模式。</summary>
+        public bool IsCoffeeSelecting { get; private set; }
+        /// <summary>咖啡机选菜品的当前光标（0=拿铁, 1=猫爪咖啡）。</summary>
+        public int CoffeeSelectCursor { get; private set; }
         public bool IsDayOver => _clock.IsDayOver(_config.dayDurationSeconds);
         public int ServedCount { get; private set; }
         public int LeftCount { get; private set; }
@@ -201,6 +205,32 @@ namespace CatCafe
             bool ok = TakeFromWarmerAt(_warmerCursor);
             IsWarmerSelecting = false;
             return ok;
+        }
+
+        /// <summary>打开咖啡机选菜品模式（拿铁/猫爪）。</summary>
+        public void OpenCoffeeSelect()
+        {
+            if (_order.Step != OrderStep.None) return;
+            IsCoffeeSelecting = true;
+            CoffeeSelectCursor = 0;
+        }
+
+        /// <summary>关闭咖啡机选菜品。</summary>
+        public void CloseCoffeeSelect() => IsCoffeeSelecting = false;
+
+        /// <summary>咖啡机选菜品光标左右移动。</summary>
+        public void MoveCoffeeCursor(int delta)
+        {
+            CoffeeSelectCursor = (CoffeeSelectCursor + delta + 2) % 2; // 0/1 循环
+        }
+
+        /// <summary>确认选菜品并开始制作。</summary>
+        public bool ConfirmCoffeeSelect()
+        {
+            if (!IsCoffeeSelecting) return false;
+            var recipe = CoffeeSelectCursor == 0 ? RecipeType.Latte : RecipeType.CatPaw;
+            IsCoffeeSelecting = false;
+            return Brew(recipe);
         }
 
         public void FeedCat() { }

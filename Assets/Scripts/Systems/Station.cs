@@ -30,7 +30,7 @@ namespace CatCafe
             }
         }
 
-        /// <summary>咖啡机：空闲→做拿铁；萃取好→取原料(仅拿铁/猫爪)；小游戏中→停指针。</summary>
+        /// <summary>咖啡机：空闲→打开选菜品；萃取好→取原料；小游戏中→停指针。</summary>
         private void CoffeeMachineInteract()
         {
             if (Flow == null) return;
@@ -40,7 +40,7 @@ namespace CatCafe
                      && (Flow.Order.Recipe == RecipeType.Latte || Flow.Order.Recipe == RecipeType.CatPaw))
                 Flow.Pickup();                           // 萃取好了且是咖啡机菜品 → 取原料
             else if (Flow.Order.Step == OrderStep.None)
-                Flow.Brew(RecipeType.Latte);             // 空闲 → 做拿铁
+                Flow.OpenCoffeeSelect();                 // 空闲 → 打开选菜品（拿铁/猫爪）
         }
 
         /// <summary>奶泡机：空闲→做卡布；音游中→按E判定；ReadyToPickup且是卡布→取原料。</summary>
@@ -82,18 +82,9 @@ namespace CatCafe
         {
             switch (Type)
             {
-                case StationType.CoffeeMachine: CoffeeMachineSecondary(); break; // Q：做猫爪咖啡
                 case StationType.Warmer: Flow?.MoveWarmerCursor(-1); break; // Q：光标左移
                 case StationType.CatNest: Flow?.CleanCat(); break;
             }
-        }
-
-        /// <summary>咖啡机 Q 键：空闲时做猫爪咖啡。</summary>
-        private void CoffeeMachineSecondary()
-        {
-            if (Flow == null) return;
-            if (!Flow.IsBrewGameActive && Flow.Order.Step == OrderStep.None)
-                Flow.Brew(RecipeType.CatPaw);
         }
 
         public void OnInteractTertiary()

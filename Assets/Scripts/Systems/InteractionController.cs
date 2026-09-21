@@ -19,7 +19,17 @@ namespace CatCafe
                 if (Input.GetKeyDown(KeyCode.D)) flow.MoveWarmerCursor(+1);
                 if (Input.GetKeyDown(KeyCode.F)) flow.ConfirmWarmerSelect();
                 if (Input.GetKeyDown(KeyCode.E)) flow.CloseWarmerSelect();
-                return; // 选择模式下不再走普通交互
+                return;
+            }
+
+            // 咖啡机选菜品模式：A/D 移动，F 确认，E 关闭
+            if (flow != null && flow.IsCoffeeSelecting)
+            {
+                if (Input.GetKeyDown(KeyCode.A)) flow.MoveCoffeeCursor(-1);
+                if (Input.GetKeyDown(KeyCode.D)) flow.MoveCoffeeCursor(+1);
+                if (Input.GetKeyDown(KeyCode.F)) flow.ConfirmCoffeeSelect();
+                if (Input.GetKeyDown(KeyCode.E)) flow.CloseCoffeeSelect();
+                return;
             }
 
             if (Input.GetKeyDown(KeyCode.E)) Interact(0);
