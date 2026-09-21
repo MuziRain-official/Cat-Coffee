@@ -53,6 +53,12 @@ namespace CatCafe
             Day++;
         }
 
+        /// <summary>调试：直接加金币。</summary>
+        public void AddCoins(int amount)
+        {
+            TotalCoins += amount;
+        }
+
         // —— 序列化 ——
 
         [System.Serializable]

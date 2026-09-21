@@ -7,6 +7,7 @@ namespace CatCafe
     {
         Menu,    // 主菜单
         Playing, // 经营中
+        DayEnd,  // 当天结束，显示结算
     }
 
     /// <summary>
@@ -24,6 +25,8 @@ namespace CatCafe
         public GameConfigSO Config { get; private set; }
         public Progress Progress { get; private set; }
         public GameState State { get; private set; } = GameState.Menu;
+        /// <summary>当天结算的利润（结算界面显示用）。</summary>
+        public int DayProfit { get; private set; }
 
         private void Awake()
         {
@@ -55,15 +58,15 @@ namespace CatCafe
 
         private void Update()
         {
-            if (State != GameState.Playing) return; // 菜单时不跑游戏
+            if (State != GameState.Playing) return; // 菜单/结算时不跑游戏
 
             Flow.Tick(Time.deltaTime);
 
-            // 打烊自动结算并进入下一天（只结算一次）
+            // 打烊自动进入结算界面（暂停，不结算）
             if (Flow.IsDayOver && !_dayEnded)
             {
                 _dayEnded = true;
-                EndDay();
+                ShowDayEnd();
             }
 
             if (Input.GetKeyDown(KeyCode.Space))
@@ -80,7 +83,7 @@ namespace CatCafe
             Flow = new GameFlow(Config, Progress);
             _dayEnded = false;
             State = GameState.Playing;
-            ApplyExtraTables();                  // 按进度显示/隐藏加桌
+            ApplyExtraTables();
         }
 
         /// <summary>继续游戏：加载存档。</summary>
@@ -110,6 +113,48 @@ namespace CatCafe
             State = GameState.Menu;
         }
 
+        // —— 结算日流程 ——
+
+        /// <summary>进入结算界面：记录当天利润，暂停游戏。</summary>
+        public void ShowDayEnd()
+        {
+            DayProfit = Flow.Ledger.Profit;
+            State = GameState.DayEnd;
+        }
+
+        /// <summary>开始下一天：结算利润→总金币→存档→新的一天。</summary>
+        public void StartNextDay()
+        {
+            Progress.EndDay(DayProfit);          // 当天利润入账
+            ProgressStore.Save(Progress);
+            Flow = new GameFlow(Config, Progress); // 新的一天
+            _dayEnded = false;
+            State = GameState.Playing;
+            ApplyExtraTables();
+        }
+
+        // —— 调试按钮 ——
+
+        /// <summary>调试：立即结束当天（进入结算界面）。</summary>
+        public void DebugEndDay()
+        {
+            if (State != GameState.Playing) return;
+            _dayEnded = true;
+            ShowDayEnd();
+        }
+
+        /// <summary>调试：加 100 金币到总金币。</summary>
+        public void DebugAddCoins()
+        {
+            if (State != GameState.Playing) return;
+            // 通过 EndDay 机制：直接给 Progress 加钱（临时借道，不推进天数）
+            var p = Progress;
+            // 用反射不可行，直接构造新 Progress 或加个方法
+            // 简化：给 Progress 加公开方法 AddCoins
+            p.AddCoins(100);
+            ProgressStore.Save(Progress);
+        }
+
         // —— 暴露给 UI 的操作 ——
         public void StartDay() { Flow = new GameFlow(Config, Progress); }
         public void TogglePause() => Flow.Clock.IsPaused = !Flow.Clock.IsPaused;
@@ -124,14 +169,10 @@ namespace CatCafe
             return true;
         }
 
-        /// <summary>结束营业日：结算利润→总金币→存档→下一天。</summary>
+        /// <summary>结束营业日（已废弃，改用 ShowDayEnd + StartNextDay）。</summary>
         public void EndDay()
         {
-            int profit = Flow.Ledger.Profit;
-            Progress.EndDay(profit);
-            ProgressStore.Save(Progress);
-            Flow = new GameFlow(Config, Progress); // 新的一天
-            _dayEnded = false;
+            ShowDayEnd();
         }
 
         public void Brew() => Flow.Brew();
