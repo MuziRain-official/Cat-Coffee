@@ -78,12 +78,13 @@ namespace CatCafe
             Step = OrderStep.Frothing;
         }
 
-        /// <summary>打奶泡完成，锁定品质并进入 ReadyToPickup。</summary>
+        /// <summary>打奶泡完成，锁定品质并进入 Extracting 读条（奶泡机也需要读条）。</summary>
         public void CompleteFroth(BrewQuality quality)
         {
             if (Step != OrderStep.Frothing) return;
             Quality = quality;
-            Step = OrderStep.ReadyToPickup;
+            ExtractProgress = 0f;
+            Step = OrderStep.Extracting; // 复用读条状态
         }
 
         /// <summary>回设备取原料。</summary>

@@ -32,10 +32,29 @@ namespace CatCafe
                 return;
             }
 
+            // 商店模式：A/D 移动，F 购买，E 关闭
+            if (flow != null && flow.IsShopOpen)
+            {
+                if (Input.GetKeyDown(KeyCode.A)) flow.MoveShopCursor(-1);
+                if (Input.GetKeyDown(KeyCode.D)) flow.MoveShopCursor(+1);
+                if (Input.GetKeyDown(KeyCode.F)) BuyCurrentItem();
+                if (Input.GetKeyDown(KeyCode.E)) flow.CloseShop();
+                return;
+            }
+
             if (Input.GetKeyDown(KeyCode.E)) Interact(0);
             if (Input.GetKeyDown(KeyCode.Q)) Interact(1);
             if (Input.GetKeyDown(KeyCode.R)) Interact(2);
             if (Input.GetKeyDown(KeyCode.F)) Carry();
+        }
+
+        /// <summary>商店购买当前道具。</summary>
+        private void BuyCurrentItem()
+        {
+            var gm = GameManager.Instance;
+            if (gm == null) return;
+            var item = gm.Flow.CurrentShopItem();
+            gm.BuyItem(item);
         }
 
         private void Interact(int slot)

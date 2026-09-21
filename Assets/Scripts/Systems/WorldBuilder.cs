@@ -96,10 +96,18 @@ namespace CatCafe
             warmer.AddComponent<WarmerView>(); // 每杯新鲜度条
             warmer.AddComponent<WarmerSelectView>(); // 选择栏
 
+            // —— 商店台（右下角）——
+            var shop = MakeStation("Shop", new Vector3(6.5f, -4.5f, 0f), new Vector2(1.6f, 1.6f), new Color(0.4f, 0.35f, 0.55f), StationType.Shop, "warmer");
+            shop.AddComponent<ShopView>(); // 商店面板
+
             // —— 3 张桌子（上方，围绕吧台，圆桌用方形scale保持圆形）——
             MakeFurniture("Table_A", new Vector3(-4.5f, 3.6f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
             MakeFurniture("Table_B", new Vector3(0f, 3.6f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
             MakeFurniture("Table_C", new Vector3(4.5f, 3.6f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
+
+            // —— 道具3：加两桌四椅（拥有 ExtraTables 才生成）——
+            if (GameManager.Instance != null && GameManager.Instance.Progress.HasItem(ItemType.ExtraTables))
+                BuildExtraTables();
 
             // —— 三个猫垫（无碰撞）+ 猫实体 ——
             BuildCatPadsAndCat();
@@ -107,6 +115,19 @@ namespace CatCafe
             // 6 个座位标记（无碰撞）
             for (int i = 0; i < Seats.Length; i++)
                 NewArtObject("Seat_" + i, "chair", Seats[i], new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
+        }
+
+        /// <summary>道具3：在现有三桌下面加两桌四椅。</summary>
+        private void BuildExtraTables()
+        {
+            // 两桌在 y=1.0 一排（现有桌子的下方）
+            MakeFurniture("Table_D", new Vector3(-2f, 1.0f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
+            MakeFurniture("Table_E", new Vector3(2f, 1.0f, 0f), new Vector2(1.6f, 1.6f), new Color(0.45f, 0.35f, 0.25f), "table");
+            // 每桌两椅
+            NewArtObject("Seat_D1", "chair", new Vector3(-2.4f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
+            NewArtObject("Seat_D2", "chair", new Vector3(-1.6f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
+            NewArtObject("Seat_E1", "chair", new Vector3(1.6f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
+            NewArtObject("Seat_E2", "chair", new Vector3(2.4f, 1.0f, 0f), new Vector2(0.9f, 0.9f), new Color(0.6f, 0.65f, 0.7f), -1);
         }
 
         private void BuildCatPadsAndCat()

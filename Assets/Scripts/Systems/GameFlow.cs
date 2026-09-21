@@ -25,10 +25,12 @@ namespace CatCafe
 
         private float _spawnTimer;
         private int _warmerCursor; // 保温台选杯光标
+        private readonly Progress _progress;
 
-        public GameFlow(GameConfigSO config, int seed = 0)
+        public GameFlow(GameConfigSO config, Progress progress = null, int seed = 0)
         {
             _config = config;
+            _progress = progress ?? new Progress();
             _clock = new DayClock();
             _cat = new CatState();
             _ledger = new DayLedger();
@@ -38,6 +40,9 @@ namespace CatCafe
         }
 
         // —— 只读视图 ——
+        public Progress Progress => _progress;
+        public bool HasNoWaitItem => _progress.HasItem(ItemType.NoWait);
+        public bool HasQuickServeItem => _progress.HasItem(ItemType.QuickServe);
         public DayClock Clock => _clock;
         public CatState Cat => _cat;
         public DayLedger Ledger => _ledger;
@@ -57,6 +62,10 @@ namespace CatCafe
         public bool IsCoffeeSelecting { get; private set; }
         /// <summary>咖啡机选菜品的当前光标（0=拿铁, 1=猫爪咖啡）。</summary>
         public int CoffeeSelectCursor { get; private set; }
+        /// <summary>是否处于商店浏览模式。</summary>
+        public bool IsShopOpen { get; private set; }
+        /// <summary>商店当前光标（道具索引）。</summary>
+        public int ShopCursor { get; private set; }
         public bool IsDayOver => _clock.IsDayOver(_config.dayDurationSeconds);
         public int ServedCount { get; private set; }
         public int LeftCount { get; private set; }
@@ -158,6 +167,32 @@ namespace CatCafe
             return true;
         }
 
+        /// <summary>
+        /// 道具1「自动送餐」：手上持菜品时，自动送到最急需且菜品匹配的顾客。
+        /// 按耐心剩余升序（耐心最低最优先）。
+        /// </summary>
+        public bool QuickServe()
+        {
+            if (!_progress.HasItem(ItemType.QuickServe)) return false;
+            if (_order.Step != OrderStep.ReadyToServe) return false;
+
+            Customer target = null;
+            float minPatience = float.MaxValue;
+            foreach (var c in _customers)
+            {
+                if (c.Phase != CustomerPhase.Waiting) continue;
+                if (c.OrderedRecipe != _order.Recipe) continue; // 需求不匹配跳过
+                if (c.RemainingPatience < minPatience)
+                {
+                    minPatience = c.RemainingPatience;
+                    target = c;
+                }
+            }
+            if (target == null) return false; // 没有对应需求的顾客
+
+            return ServeTo(target);
+        }
+
         /// <summary>把手里成品放入保温台。</summary>
         public bool StoreToWarmer()
         {
@@ -233,6 +268,25 @@ namespace CatCafe
             return Brew(recipe);
         }
 
+        /// <summary>打开商店。</summary>
+        public void OpenShop()
+        {
+            IsShopOpen = true;
+            ShopCursor = 0;
+        }
+
+        /// <summary>关闭商店。</summary>
+        public void CloseShop() => IsShopOpen = false;
+
+        /// <summary>商店光标移动。</summary>
+        public void MoveShopCursor(int delta)
+        {
+            ShopCursor = (ShopCursor + delta + ItemDef.All.Length) % ItemDef.All.Length;
+        }
+
+        /// <summary>商店确认购买当前道具（由 GameManager 执行购买+存档）。</summary>
+        public ItemType CurrentShopItem() => ItemDef.All[ShopCursor];
+
         public void FeedCat() { }
         public void CleanCat() { }
         public void PetCat() { }
@@ -261,18 +315,22 @@ namespace CatCafe
             _brewGame.Tick(deltaTime, _config.swingSpeed);
             _frothGame.Tick(deltaTime);
             _latteArtGame.Tick(deltaTime);
-            _order.TickExtract(deltaTime, _config.extractSeconds);
 
             // 吧台猫增益：保鲜度下降减速（新鲜度更持久）
             float freshSlow = (_cat.Zone == CatZone.Bar && !_cat.IsCarried) ? _config.barZoneFreshnessSlow : 0f;
             _warmer.Tick(deltaTime * (1f - freshSlow), _config.freshDurationSeconds);
 
-            // 吧台猫增益：萃取读条加速
+            // 萃取读条：道具2免读条则直接完成，否则按吧台猫增益加速
             float extractBoost = (_cat.Zone == CatZone.Bar && !_cat.IsCarried) ? _config.barZoneSpeedBoost : 0f;
             if (_order.Step == OrderStep.Extracting)
-                _order.TickExtract(deltaTime * (1f + extractBoost), _config.extractSeconds);
+            {
+                if (HasNoWaitItem)
+                    _order.TickExtract(1f, 0f); // 免读条：立即完成
+                else
+                    _order.TickExtract(deltaTime * (1f + extractBoost), _config.extractSeconds);
+            }
 
-            // 打奶泡游戏自然结束（节拍走完）→ 结算订单
+            // 打奶泡游戏自然结束 → 结算订单；有读条需求（非免读条）时进入读条状态
             if (_order.Step == OrderStep.Frothing && !_frothGame.IsActive)
                 _order.CompleteFroth(_frothGame.Result());
 

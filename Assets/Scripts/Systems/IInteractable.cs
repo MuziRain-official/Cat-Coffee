@@ -9,6 +9,7 @@ namespace CatCafe
         Frother,       // 奶泡机（卡布奇诺）
         Counter,       // 装杯
         Warmer,        // 保温台（备餐/选杯取餐）
+        Shop,          // 商店台（买道具）
         CatNest        // 猫咪（E喂食/Q铲屎/R互动）
     }
 

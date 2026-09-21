@@ -57,7 +57,7 @@ namespace CatCafe.Tests
         }
 
         [Test]
-        public void CappuccinoFlow_FrothPickupCup()
+        public void CappuccinoFlow_FrothThenExtractThenPickupCup()
         {
             var o = new Order();
             o.Start(RecipeType.Cappuccino);
@@ -65,6 +65,9 @@ namespace CatCafe.Tests
             Assert.AreEqual(OrderStep.Frothing, o.Step);
 
             o.CompleteFroth(BrewQuality.Good);
+            Assert.AreEqual(OrderStep.Extracting, o.Step); // 奶泡完成 → 读条
+
+            o.TickExtract(ExtractSeconds, ExtractSeconds); // 读条完成
             Assert.AreEqual(OrderStep.ReadyToPickup, o.Step);
 
             o.Pickup();

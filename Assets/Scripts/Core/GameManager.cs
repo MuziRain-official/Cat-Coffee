@@ -15,6 +15,7 @@ namespace CatCafe
 
         public GameFlow Flow { get; private set; }
         public GameConfigSO Config { get; private set; }
+        public Progress Progress { get; private set; }
 
         private void Awake()
         {
@@ -26,7 +27,8 @@ namespace CatCafe
             Instance = this;
 
             Config = config != null ? config : ScriptableObject.CreateInstance<GameConfigSO>();
-            Flow = new GameFlow(Config);
+            Progress = ProgressStore.Load(); // 读档
+            Flow = new GameFlow(Config, Progress);
         }
 
         private void OnDestroy()
@@ -40,19 +42,46 @@ namespace CatCafe
             }
         }
 
+        private bool _dayEnded;
+
         private void Update()
         {
             Flow.Tick(Time.deltaTime);
+
+            // 打烊自动结算并进入下一天（只结算一次）
+            if (Flow.IsDayOver && !_dayEnded)
+            {
+                _dayEnded = true;
+                EndDay();
+            }
 
             if (Input.GetKeyDown(KeyCode.Space))
                 TogglePause();
         }
 
         // —— 暴露给 UI 的操作 ——
-        public void StartDay() { Flow = new GameFlow(Config); }
+        public void StartDay() { Flow = new GameFlow(Config, Progress); }
         public void TogglePause() => Flow.Clock.IsPaused = !Flow.Clock.IsPaused;
         public void ToggleFastForward() =>
             Flow.Clock.TimeScale = Flow.Clock.TimeScale > 1f ? 1f : Config.fastForwardMultiplier;
+
+        /// <summary>购买道具（永久，存档）。</summary>
+        public bool BuyItem(ItemType item)
+        {
+            if (!Progress.BuyItem(item)) return false;
+            ProgressStore.Save(Progress);
+            return true;
+        }
+
+        /// <summary>结束营业日：结算利润→总金币→存档→下一天。</summary>
+        public void EndDay()
+        {
+            int profit = Flow.Ledger.Profit;
+            Progress.EndDay(profit);
+            ProgressStore.Save(Progress);
+            Flow = new GameFlow(Config, Progress); // 新的一天
+            _dayEnded = false;
+        }
 
         public void Brew() => Flow.Brew();
         public void Cup() => Flow.Cup();

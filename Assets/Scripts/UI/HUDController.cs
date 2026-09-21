@@ -48,10 +48,10 @@ namespace CatCafe
 
             // 1. 剩余时间
             float remain = flow.Clock.RemainingSeconds(cfg.dayDurationSeconds);
-            _timeText.text = flow.IsDayOver ? "打烊" : $"剩余 {Mathf.CeilToInt(remain)}s";
+            _timeText.text = flow.IsDayOver ? "打烊" : $"第{flow.Progress.Day}天 剩余 {Mathf.CeilToInt(remain)}s";
 
-            // 2. 赚了多少钱（利润 = 收入 - 成本）
-            _coinsText.text = $"赚了 {flow.Ledger.Profit} 金币";
+            // 2. 赚了多少钱（利润 = 收入 - 成本）+ 总金币
+            _coinsText.text = $"本日赚 {flow.Ledger.Profit} | 总金币 {flow.Progress.TotalCoins}";
 
             // 3. 猫位置
             _catText.text = $"猫：{ZoneLabel(flow.Cat)}";

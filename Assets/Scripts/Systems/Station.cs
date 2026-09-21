@@ -26,6 +26,7 @@ namespace CatCafe
                 case StationType.Frother: FrotherInteract(); break;
                 case StationType.Counter: CounterInteract(); break;
                 case StationType.Warmer: WarmerInteract(); break;
+                case StationType.Shop: Flow?.OpenShop(); break;
                 case StationType.CatNest: Flow?.FeedCat(); break;
             }
         }

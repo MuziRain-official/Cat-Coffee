@@ -17,9 +17,9 @@ namespace CatCafe
 
         [Header("顾客系统（均衡紧张度）")]
         [Tooltip("生成间隔下限（秒）")]
-        public float customerSpawnMin = 8f;
+        public float customerSpawnMin = 12f;
         [Tooltip("生成间隔上限（秒）")]
-        public float customerSpawnMax = 14f;
+        public float customerSpawnMax = 18f;
         [Tooltip("同时在场上限（座位数）")]
         public int maxCustomers = 6;
         [Tooltip("耐心值（秒），点单后未上菜则流失")]
