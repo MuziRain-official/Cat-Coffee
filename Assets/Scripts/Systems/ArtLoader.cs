@@ -17,14 +17,14 @@ namespace CatCafe
             var tex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
                 $"Assets/Art/{assetName}.png");
             if (tex == null) return null;
+            // PPU = 贴图宽度，让 sprite 世界尺寸 = 1 单位，实际大小由物体 localScale 控制
             return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
-                new Vector2(0.5f, 0.5f), 96f);
+                new Vector2(0.5f, 0.5f), tex.width);
 #else
-            // 运行时：从 Resources 加载（需要把 Art 放进 Resources）
             var tex = Resources.Load<Texture2D>("Art/" + assetName);
             if (tex == null) return null;
             return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
-                new Vector2(0.5f, 0.5f), 96f);
+                new Vector2(0.5f, 0.5f), tex.width);
 #endif
         }
 
