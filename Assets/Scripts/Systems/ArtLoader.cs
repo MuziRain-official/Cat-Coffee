@@ -3,16 +3,26 @@ using UnityEngine;
 namespace CatCafe
 {
     /// <summary>
-    /// 美术资源加载器：从 Resources 或直接路径加载像素贴图。
-    /// 图放在 Assets/Art/，通过 Resources.Load 需要放 Resources 目录，
-    /// 这里改用 AssetDatabase（仅编辑器）+ 运行时兜底白色方块。
-    /// 实际运行时推荐把 Art 移到 Assets/Resources/Art。
+    /// 美术资源加载器。
+    /// 默认使用程序化像素占位（干净统一），AI 贴图保留在 Assets/Art 备用。
+    /// 切换：把 useProcedural 设为 false 则用 AI 贴图。
     /// </summary>
     public static class ArtLoader
     {
+        /// <summary>true = 程序化像素占位；false = AI 生成贴图。</summary>
+        private static bool _useProcedural = true;
+        public static bool UseProcedural
+        {
+            get => _useProcedural;
+            set => _useProcedural = value;
+        }
+
         /// <summary>尝试加载一张贴图，失败返回 null（调用方回退到色块）。</summary>
         public static Sprite Load(string assetName)
         {
+            if (_useProcedural)
+                return PixelArtGenerator.Get(assetName);
+
 #if UNITY_EDITOR
             var tex = UnityEditor.AssetDatabase.LoadAssetAtPath<Texture2D>(
                 $"Assets/Art/{assetName}.png");
