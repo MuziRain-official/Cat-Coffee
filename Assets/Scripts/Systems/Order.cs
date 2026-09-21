@@ -21,10 +21,14 @@ namespace CatCafe
         /// <summary>本杯咖啡的品质（萃取小游戏锁定，上菜时用于计价）。</summary>
         public BrewQuality Quality { get; private set; } = BrewQuality.Good;
 
+        /// <summary>本杯咖啡的新鲜度（1=现做；从保温台取会 <1）。</summary>
+        public float Freshness { get; private set; } = 1f;
+
         /// <summary>开始第 1 步：萃取小游戏。</summary>
         public void StartBrewing()
         {
             Step = OrderStep.Brewing;
+            Freshness = 1f; // 现做默认新鲜
         }
 
         /// <summary>小游戏停指针后，锁定品质并进入 ReadyToPickup。仅在萃取中有效。</summary>
@@ -49,16 +53,26 @@ namespace CatCafe
             Step = OrderStep.ReadyToServe;
         }
 
+        /// <summary>从保温台取一杯端到手里。仅在空闲时有效。成功返回 true。</summary>
+        public bool TakeFromWarmer(BrewQuality quality, float freshness)
+        {
+            if (Step != OrderStep.None) return false;
+            Quality = quality;
+            Freshness = freshness;
+            Step = OrderStep.ReadyToServe;
+            return true;
+        }
+
         /// <summary>复位订单到空闲（用于成品入保温台后清空手中状态）。</summary>
         public void ResetToNone() => Step = OrderStep.None;
 
         /// <summary>上菜给顾客。成功返回 true 并复位订单，同时把品质与新鲜度写进顾客。</summary>
-        public bool Serve(Customer customer, float eatingSeconds, float freshness = 1f)
+        public bool Serve(Customer customer, float eatingSeconds)
         {
             if (Step != OrderStep.ReadyToServe) return false;
             if (customer == null || customer.Phase != CustomerPhase.Waiting) return false;
 
-            customer.Serve(eatingSeconds, Quality, freshness);
+            customer.Serve(eatingSeconds, Quality, Freshness);
             Step = OrderStep.None;
             return true;
         }

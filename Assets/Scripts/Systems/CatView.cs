@@ -23,23 +23,6 @@ namespace CatCafe
         public void OnInteractSecondary() => Flow?.CleanCat();
         public void OnInteractTertiary() => Flow?.PetCat();
 
-        /// <summary>抱猫/放猫切换（F 键）。</summary>
-        public void ToggleCarry()
-        {
-            if (Flow == null) return;
-
-            if (Flow.Cat.IsCarried)
-            {
-                // 找最近的猫垫放下
-                var pad = FindNearestPad();
-                if (pad != null) Flow.PutDownCat(pad.Zone);
-            }
-            else
-            {
-                Flow.PickUpCat();
-            }
-        }
-
         private void Update()
         {
             if (Flow == null) return;
@@ -56,22 +39,6 @@ namespace CatCafe
                 var pos = WorldBuilder.PadPosition(Flow.Cat.Zone);
                 transform.position = Vector3.Lerp(transform.position, pos, Time.deltaTime * 8f);
             }
-        }
-
-        private CatPad FindNearestPad()
-        {
-            CatPad best = null;
-            float bestDist = float.MaxValue;
-            foreach (var pad in FindObjectsOfType<CatPad>())
-            {
-                float d = Vector2.Distance(transform.position, pad.transform.position);
-                if (d < bestDist)
-                {
-                    bestDist = d;
-                    best = pad;
-                }
-            }
-            return best;
         }
     }
 }

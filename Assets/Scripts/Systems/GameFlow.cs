@@ -121,19 +121,16 @@ namespace CatCafe
             return true;
         }
 
-        /// <summary>从保温台取一杯成品，端去上菜（FIFO）。</summary>
+        /// <summary>从保温台取一杯端到手里（不自动上菜）。FIFO，空闲时有效。</summary>
         public bool TakeFromWarmer()
         {
             var cup = _warmer.Take();
             if (cup == null) return false;
-            var customer = EarliestWaiting();
-            if (customer == null)
+            if (!_order.TakeFromWarmer(cup.Quality, cup.Freshness))
             {
-                _warmer.ReturnCup(cup); // 没顾客，放回（保留新鲜度）
+                _warmer.ReturnCup(cup); // 手里已经有东西，放回
                 return false;
             }
-            customer.Serve(_config.customerEatingSeconds, cup.Quality, cup.Freshness);
-            ServedCount++;
             return true;
         }
 

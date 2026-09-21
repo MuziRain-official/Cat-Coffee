@@ -29,12 +29,44 @@ namespace CatCafe
             }
         }
 
-        /// <summary>F 键：抱猫/放猫（仅猫实体响应）。</summary>
+        /// <summary>F 键：抱猫 / 放猫（放猫必须在猫垫旁）。</summary>
         private void Carry()
         {
-            var target = FindNearest();
-            if (target is CatView cat)
-                cat.ToggleCarry();
+            var flow = GameManager.Instance?.Flow;
+            if (flow == null) return;
+
+            if (flow.Cat.IsCarried)
+            {
+                // 抱猫时：找主角附近的猫垫放下
+                var pad = FindNearestPad();
+                if (pad != null) flow.PutDownCat(pad.Zone);
+            }
+            else
+            {
+                // 没抱猫：找最近的猫实体抱起
+                var target = FindNearest();
+                if (target is CatView cat && !flow.Cat.IsCarried)
+                    flow.PickUpCat();
+            }
+        }
+
+        /// <summary>找主角交互范围内的猫垫（放猫用）。</summary>
+        private CatPad FindNearestPad()
+        {
+            CatPad best = null;
+            float bestDist = float.MaxValue;
+            Vector2 pos = transform.position;
+
+            foreach (var pad in FindObjectsOfType<CatPad>())
+            {
+                float d = Vector2.Distance(pad.transform.position, pos);
+                if (d <= 1.8f && d < bestDist)
+                {
+                    bestDist = d;
+                    best = pad;
+                }
+            }
+            return best;
         }
 
         /// <summary>找距离最近且在范围内的可交互对象。</summary>
