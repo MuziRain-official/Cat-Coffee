@@ -85,6 +85,40 @@ namespace CatCafe
             return c.ToSprite();
         }
 
+        /// <summary>按菜品返回成品杯图标（拿铁=奶白杯、卡布=高奶泡、猫爪=带爪印）。</summary>
+        public static Sprite CupIcon(RecipeType recipe)
+        {
+            var c = new PixelCanvas(N);
+            switch (recipe)
+            {
+                case RecipeType.Latte:
+                    c.FillRect(5, 6, 11, 13, PixelPalette.CreamDark);
+                    c.FillRect(4, 5, 12, 7, PixelPalette.MilkFoam);
+                    c.RectOutline(11, 8, 14, 11, PixelPalette.CreamDark);
+                    break;
+
+                case RecipeType.Cappuccino:
+                    c.FillRect(5, 6, 11, 13, PixelPalette.CreamDark);
+                    // 高高奶泡
+                    c.FillRect(4, 3, 12, 8, PixelPalette.MilkFoam);
+                    c.FillRect(5, 4, 11, 8, PixelPalette.Cream);
+                    c.RectOutline(11, 8, 14, 11, PixelPalette.CreamDark);
+                    break;
+
+                case RecipeType.CatPaw:
+                    c.FillRect(5, 6, 11, 13, PixelPalette.CreamDark);
+                    c.FillRect(4, 5, 12, 7, PixelPalette.MilkFoam);
+                    // 猫爪印（三个小圆+一个大圆）
+                    c.FillCircle(6, 8, 1, PixelPalette.CoffeeBrown);
+                    c.FillCircle(8, 7, 1, PixelPalette.CoffeeBrown);
+                    c.FillCircle(10, 8, 1, PixelPalette.CoffeeBrown);
+                    c.FillCircle(8, 10, 2, PixelPalette.CoffeeBrown);
+                    c.RectOutline(11, 8, 14, 11, PixelPalette.CreamDark);
+                    break;
+            }
+            return c.ToSprite();
+        }
+
         public static Sprite Cat()
         {
             var c = new PixelCanvas(N);
@@ -208,6 +242,36 @@ namespace CatCafe
             for (int y = 4; y < N; y += 5)
                 for (int x = 0; x < N; x++)
                     c.Set(x, y, PixelPalette.Cream);
+            return c.ToSprite();
+        }
+
+        /// <summary>原料图标（萃取液=深棕杯，奶泡=浅奶杯）。</summary>
+        public static Sprite IngredientIcon(RecipeType recipe)
+        {
+            var c = new PixelCanvas(N);
+            if (recipe == RecipeType.Cappuccino)
+            {
+                // 奶泡原料：浅奶色杯
+                c.FillRect(5, 5, 11, 13, PixelPalette.CreamDark);
+                c.FillRect(5, 4, 11, 6, PixelPalette.MilkFoam);
+                c.RectOutline(11, 7, 14, 10, PixelPalette.CreamDark);
+            }
+            else
+            {
+                // 咖啡液原料：深棕杯
+                c.FillRect(5, 5, 11, 13, PixelPalette.CreamDark);
+                c.FillRect(5, 4, 11, 6, PixelPalette.CoffeeBrown);
+                c.RectOutline(11, 7, 14, 10, PixelPalette.CreamDark);
+            }
+            return c.ToSprite();
+        }
+
+        /// <summary>气泡底（白色圆底）。</summary>
+        public static Sprite BubbleBg()
+        {
+            var c = new PixelCanvas(N);
+            c.FillCircle(8, 8, 7, PixelPalette.White);
+            c.CircleOutline(8, 8, 7, PixelPalette.CreamDark);
             return c.ToSprite();
         }
 

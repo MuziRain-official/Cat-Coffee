@@ -15,6 +15,8 @@ namespace CatCafe
         private SpriteRenderer _body;
         private GameFlow _flow;
         private float _maxPatience;
+        private GameObject _bubble;      // 头顶气泡（含菜品图标）
+        private SpriteRenderer _bubbleIcon;
 
         private static readonly Color WaitingColor = new Color(0.55f, 0.75f, 0.95f);
         private static readonly Color EatingColor = new Color(1f, 0.75f, 0.3f);
@@ -43,12 +45,41 @@ namespace CatCafe
             view._flow = flow;
             view._maxPatience = maxPatience;
             view._body = sr;
+            view.CreateBubble(go.transform);
             return view;
+        }
+
+        /// <summary>创建头顶气泡（白色圆底 + 菜品图标）。</summary>
+        private void CreateBubble(Transform parent)
+        {
+            _bubble = new GameObject("Bubble", typeof(SpriteRenderer));
+            _bubble.transform.SetParent(parent, false);
+            _bubble.transform.localPosition = new Vector3(0f, 0.85f, 0f);
+            _bubble.transform.localScale = new Vector3(0.45f, 0.45f, 1f);
+            var bg = _bubble.GetComponent<SpriteRenderer>();
+            bg.sprite = PixelArtGenerator.BubbleBg();
+            bg.sortingOrder = 7;
+
+            // 菜品图标
+            var iconGo = new GameObject("Icon", typeof(SpriteRenderer));
+            iconGo.transform.SetParent(_bubble.transform, false);
+            iconGo.transform.localScale = new Vector3(0.7f, 0.7f, 1f);
+            _bubbleIcon = iconGo.GetComponent<SpriteRenderer>();
+            _bubbleIcon.sortingOrder = 8;
         }
 
         private void Update()
         {
             if (Customer == null) return;
+
+            // 气泡：等待时显示菜品图标，用餐/离开时隐藏
+            if (_bubble != null)
+            {
+                bool show = Customer.Phase == CustomerPhase.Waiting;
+                _bubble.SetActive(show);
+                if (show && _bubbleIcon != null)
+                    _bubbleIcon.sprite = PixelArtGenerator.CupIcon(Customer.OrderedRecipe);
+            }
 
             // 有贴图时保持原色（耐心可视化后续用进度条补）；无贴图则用颜色表达状态
             if (_body.sprite != SpriteUtil.White)

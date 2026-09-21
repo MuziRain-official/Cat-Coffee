@@ -137,6 +137,7 @@ namespace CatCafe
             player.AddComponent<BoxCollider2D>(); // 默认 1x1，随 scale 拉伸
             player.AddComponent<PlayerController>();
             player.AddComponent<InteractionController>();
+            player.AddComponent<PlayerCarryView>(); // 手中物品可视化
         }
 
         private void MakeWall(Vector3 pos, Vector2 size)

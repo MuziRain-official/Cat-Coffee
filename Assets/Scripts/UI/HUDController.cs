@@ -59,11 +59,14 @@ namespace CatCafe
             _orderText.text = flow.Order.Step switch
             {
                 OrderStep.None => $"订单：空闲  保温台[{flow.Warmer.Count}/{cfg.warmerCapacity}]",
-                OrderStep.Brewing => $"订单：萃取中（时机条，再按E停）",
-                OrderStep.Extracting => $"订单：咖啡机萃取中 {Mathf.CeilToInt(flow.Order.ExtractProgress * 100)}%",
-                OrderStep.ReadyToPickup => $"订单：萃取好[{QualityLabel(flow.Order.Quality)}]，回咖啡机取原料",
-                OrderStep.HoldingIngredients => "订单：持原料，到装杯台装杯",
-                OrderStep.ReadyToServe => $"订单：持成品，上菜 或 保温台备餐[{flow.Warmer.Count}/{cfg.warmerCapacity}]",
+                OrderStep.Brewing => $"做{Recipe.Name(flow.Order.Recipe)}：萃取中（时机条，再按E停）",
+                OrderStep.Extracting => $"做{Recipe.Name(flow.Order.Recipe)}：咖啡机萃取中 {Mathf.CeilToInt(flow.Order.ExtractProgress * 100)}%",
+                OrderStep.Frothing => $"做{Recipe.Name(flow.Order.Recipe)}：打奶泡（连击E，已{flow.FrothGame.Hits}拍）",
+                OrderStep.ReadyToPickup => $"做{Recipe.Name(flow.Order.Recipe)}：原料好[{QualityLabel(flow.Order.Quality)}]，回设备取",
+                OrderStep.HoldingIngredients => $"做{Recipe.Name(flow.Order.Recipe)}：持原料，到装杯台装杯",
+                OrderStep.ReadyToLatteArt => $"做{Recipe.Name(flow.Order.Recipe)}：装好杯，装杯台按E拉花",
+                OrderStep.LatteArt => $"拉花中（3x3中心格，按E停）",
+                OrderStep.ReadyToServe => $"持成品[{Recipe.Name(flow.Order.Recipe)}]，上菜 或 保温台备餐[{flow.Warmer.Count}/{cfg.warmerCapacity}]",
                 _ => ""
             };
 
@@ -128,7 +131,7 @@ namespace CatCafe
             _orderText = NewText("OrderText", bottomPanel, font, 26, new Vector2(20, -20), new Vector2(500, 36));
             _hintText  = NewText("HintText",  bottomPanel, font, 20, new Vector2(20, -80), new Vector2(860, 44));
             _hintText.color = new Color(1f, 0.9f, 0.5f);
-            _hintText.text = "WASD移动 · 咖啡机E萃取 · 装杯台E装杯 · 保温台E备餐/取餐 · 猫前E/Q/R/F · 空格暂停";
+            _hintText.text = "WASD移动 · 咖啡机E做拿铁 Q做猫爪 · 奶泡机E做卡布 · 装杯台E装杯/拉花 · 保温台E取Q/R选杯 · 猫前E/Q/R/F · 空格暂停";
 
             BuildBrewGameUI(canvasGo.transform, font);
         }

@@ -221,6 +221,10 @@ namespace CatCafe
             _order.TickExtract(deltaTime, _config.extractSeconds);
             _warmer.Tick(deltaTime, _config.freshDurationSeconds);
 
+            // 打奶泡游戏自然结束（节拍走完）→ 结算订单
+            if (_order.Step == OrderStep.Frothing && !_frothGame.IsActive)
+                _order.CompleteFroth(_frothGame.Result());
+
             int paidThisFrame = 0;
             SpawnIfDue(deltaTime);
 

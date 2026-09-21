@@ -4,7 +4,7 @@ namespace CatCafe
 {
     /// <summary>
     /// 保温台表现层：成品咖啡杯放在保温台台面上（方块内部），
-    /// 每杯上方贴着一条新鲜度进度条。
+    /// 每杯显示菜品图标 + 新鲜度条 + 选中光标高亮。
     /// 父物体(保温台 Station) localScale=1.6，这里用局部坐标 + 缩放补偿。
     /// </summary>
     public class WarmerView : MonoBehaviour
@@ -30,12 +30,25 @@ namespace CatCafe
             // 重新排布（居中，放在台面内部）
             LayoutCups();
 
-            // 更新每个图标的新鲜度条
+            // 更新每个图标：菜品图标 + 新鲜度条 + 光标高亮
             for (int i = 0; i < count; i++)
             {
-                var bar = _cupIcons[i].GetComponentInChildren<WorldBar>();
-                if (bar != null)
-                    bar.SetProgress(warmer.Cups[i].Freshness);
+                var icon = _cupIcons[i];
+                var cup = warmer.Cups[i];
+
+                // 菜品图标
+                var sr = icon.GetComponent<SpriteRenderer>();
+                sr.sprite = PixelArtGenerator.CupIcon(cup.Recipe);
+
+                // 新鲜度条
+                var bar = icon.GetComponentInChildren<WorldBar>();
+                if (bar != null) bar.SetProgress(cup.Freshness);
+
+                // 光标高亮：选中杯放大 + 亮边
+                bool selected = (i == flow.WarmerCursor);
+                float s = selected ? 0.62f / 1.6f : 0.5f / 1.6f;
+                icon.transform.localScale = new Vector3(s, s, 1f);
+                sr.color = selected ? new Color(1f, 0.9f, 0.5f) : Color.white;
             }
         }
 
@@ -43,16 +56,12 @@ namespace CatCafe
         {
             var icon = new GameObject("CupIcon", typeof(SpriteRenderer));
             icon.transform.SetParent(transform, false);
-            // 杯身世界尺寸 0.5×0.5，父 scale=1.6 → 局部 0.3125
             float s = 0.5f / 1.6f;
             icon.transform.localScale = new Vector3(s, s, 1f);
             var sr = icon.GetComponent<SpriteRenderer>();
             sr.sortingOrder = 6;
-            ArtLoader.Apply(sr, "coffee_cup"); // 咖啡杯贴图，失败回退色块
-            if (sr.sprite == SpriteUtil.White)
-                sr.color = new Color(0.7f, 0.5f, 0.3f); // 回退：咖啡色杯身
 
-            // 新鲜度条：贴在杯子上缘（杯图标局部坐标系，杯半高=0.5）
+            // 新鲜度条：贴在杯子上缘
             WorldBar.Create(icon.transform, new Vector3(0f, 0.5f, 0f), 0.5f, 0.08f, new Color(0.3f, 0.9f, 0.4f));
 
             _cupIcons.Add(icon);
@@ -62,11 +71,10 @@ namespace CatCafe
         {
             int n = _cupIcons.Count;
             if (n == 0) return;
-            // 世界坐标：杯子居中排布在台面上，间距 0.55
             for (int i = 0; i < n; i++)
             {
                 float worldX = (i - (n - 1) / 2f) * 0.55f;
-                float worldY = 0.1f; // 台面中心略偏上
+                float worldY = 0.1f;
                 _cupIcons[i].transform.localPosition = new Vector3(worldX / 1.6f, worldY / 1.6f, 0f);
             }
         }
